@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    class Person {
+      constructor(name = '无名', age = 10) {
+        this.name = name
+        this.age = age
+      }
+      sayName() {
+        console.log(this.name)
+      }
+      sayAge() {
+        console.log(this.age)
+      }
+      sayAllInfo() {
+        console.log(this.name, this.age)
+      }
+    }
+    let info = {
+      name: '邹亮',
+      age: '30'
+    }
+    let zc = new Person(info.name, info.age)
+    zc.sayAllInfo()
+  </script>
+</body>
+</html>

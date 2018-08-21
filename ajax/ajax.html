@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <div>
+    <p>姓名: <span class="name">徐玲</span></p> 
+    <p>性别: <span class="sex">女</span></p> 
+
+    <div onclick="changeInfos()">点击换信息</div>
+  </div>
+  <script>
+    function $Ajxa({method, url, success, fail}){
+      let xmlhttp = new XMLHttpRequest()
+      xmlhttp.open(method? e.method: 'GET', url, true)
+      xmlhttp.send()
+      xmlhttp.onreadystatechange = function() {
+        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+          let infos =JSON.parse(xmlhttp.responseText)
+          success && success(infos.data)
+        } else if(xmlhttp.resta==4 && xmlhttp.status!= 200) {
+          let infos =JSON.parse(xmlhttp.responseText)
+          fail && fail(infos.data)
+        }
+      }
+    }
+
+    function changeInfos() {
+      $Ajxa({
+        url: 'https://easy-mock.com/mock/5b67ec9c75d70b78bbc62116/goufen/goufen',
+        method: 'GET',
+        success(data) {
+          let name = data.name
+          let sex = data.sex
+          document.getElementsByClassName('name')[0].innerHTML = name
+          document.getElementsByClassName('sex')[0].innerHTML = sex
+        },
+        fail(data) {
+          console.log(data)
+        }
+      })
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>capturing and bubling</title>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    .center{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #grandpa{
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+      background-color: palevioletred;
+    }
+    #father{
+      width: 150px;
+      height: 150px;
+      background-color: paleturquoise;
+    }
+    #son{
+      width: 100px;
+      height: 100px;
+      background-color: palegreen;
+    }
+  </style>
+</head>
+<body>
+  <div id="grandpa" class="center">
+    <div id="father" class="center">
+      <div id="son" class="center">click me</div>
+    </div>
+  </div>
+  <script>
+    let son = document.getElementById('son')
+    let father = document.getElementById('father')
+    let grandpa = document.getElementById('grandpa')
+
+    son.addEventListener('click', () => {
+      console.log('son节点被点击，冒泡')
+    }, false)
+    son.addEventListener('click', () => {
+      console.log('son节点被点击，冒泡')
+    }, true)
+
+    father.addEventListener('click', () => {
+      console.log('father节点被点击，冒泡')
+    }, false)
+    father.addEventListener('click', () => {
+      setTimeout(() => {
+        console.log('father节点被点击，捕获')
+      }, 0);
+    }, true)
+
+    grandpa.addEventListener('click', () => {
+      console.log('grandpa节点被点击，冒泡')
+    }, false)
+    grandpa.addEventListener('click', () => {
+      console.log('grandpa节点被点击，捕获')
+    }, true)
+  </script>
+</body>
+</html>
