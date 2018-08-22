@@ -16,7 +16,7 @@
   <script>
     function $Ajxa({method, url, success, fail}){
       let xmlhttp = new XMLHttpRequest()
-      xmlhttp.open(method? e.method: 'GET', url, true)
+      xmlhttp.open(method? method: 'GET', url, true)
       xmlhttp.send()
       xmlhttp.onreadystatechange = function() {
         if (xmlhttp.readyState==4 && xmlhttp.status==200) {
