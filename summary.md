@@ -151,12 +151,16 @@ git reset 版本号      重置至该版本号内容，保存已修改代码
 
 git reset --hard 版本号    重置至该版本号内容，丢弃已修改代码
 
+git reset HEAD fileName   把fileName文件从暂存区撤销   暂存区： git add 后 ，文件所在的区域
+
+git checkout --fileName   丢弃fileName文件的修改
+
 git commit --amend 修改上一次commit内容    amend: 修改
 
 git branch -a 查看所有分支包括远程、本地分支  a: all
 
 git branch -d devName 删除本地分支
-
+ 
 git branch -D devName 强制删除本地分支
 
 git push origin --delete devName  删除远程分支 
