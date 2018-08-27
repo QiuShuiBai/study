@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      font-size: 0;
+    }
+    html, body{
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    let canvas = document.getElementById('canvas')
+    canvas.width = screen.availWidth
+    canvas.height = screen.availHeight
+    let w = ~~(screen.availWidth / 10)
+    let h = ~~(screen.availHeight / 20)
+    let len = Math.min(w, h)
+    let wLen = screen.availWidth - len * 10
+    let hLen = screen.availHeight - len * 20
+
+    let ctx=canvas.getContext('2d')
+    ctx.fillStyle='pink'
+    ctx.fillRect(wLen / 2, hLen / 2, len, len)
+    window.addEventListener('resize', () => {
+      canvas.width = screen.availWidth
+      canvas.height = screen.availHeight
+      w = ~~(screen.availWidth / 10)
+      h = ~~(screen.availHeight / 20)
+      len = Math.min(w, h)
+    }, false)
+    
+    window.addEventListener('keydown', ({keyCode}) => {
+      switch (keyCode) {
+        case 38:
+          console.log('上')
+          break
+        case 40:
+          console.log('下')
+          break
+        case 37:
+          console.log('左')
+          break
+        case 39:
+          console.log('右')
+          break
+      }
+    }, false)
+
+
+  </script>
+</body>
+</html>
