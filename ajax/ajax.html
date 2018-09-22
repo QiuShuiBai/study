@@ -7,11 +7,21 @@
   <title>Document</title>
 </head>
 <body>
+  <h2>mock，元素ajax请求</h2>
   <div>
-    <p>姓名: <span class="name">徐玲</span></p> 
-    <p>性别: <span class="sex">女</span></p> 
-
-    <div onclick="changeInfos()">点击换信息</div>
+    <p>姓名: <span class="name">徐玲</span></p>
+    <p>性别: <span class="sex">女</span></p>
+    <button onclick="changeInfos()">点击换信息</button>
+  </div>
+  <hr>
+  <div>
+    <h2>jsonp跨域ajax请求 get方法</h2>
+    <h3>打开控制台查看</h3>
+    <div>
+      <p>jsonp有限制，只能是get方法，且容易被注入恶意代码</p>
+      <button onclick="directAjax()">直接使用，会报错</button>
+      <button onclick="useJsonp()">使用jsonp</button>
+    </div>
   </div>
   <script>
     function $Ajxa({method, url, success, fail}){
@@ -43,6 +53,28 @@
           console.log(data)
         }
       })
+    }
+
+    function directAjax() {
+      $Ajxa({
+        url: 'https://api.douban.com/v2/book/1220562',
+        method: 'GET',
+        success(data) {
+          console.log(data)
+        },
+        fail(data) {
+          console.log(data)
+        }
+      })
+    }
+
+    function useJsonp() {
+      window.telJsonp = function(data) {
+        console.log(data)
+      }
+      let script = document.createElement('script')
+      script.src = 'https://api.douban.com/v2/book/1220562?callback=telJsonp'
+      document.getElementsByTagName('head')[0].appendChild(script)
     }
   </script>
 </body>

@@ -76,7 +76,7 @@ son.addEventListener('click', speak, false)
 
   AJAX => Asynchronous JavaScript and XML（异步的 JavaScript 和 XML）。
 
-  总结： 要先有个请求的实例，告诉这个实例如果去请求和需要请求什么。然后在请求的过程中，会汇报一些列的请求的状态信息，每次到达一个节点，都会汇报一次。在最后的节点，会汇报请求的结果。
+  总结： 要先有个请求的实例，告诉这个实例如何去请求和需要请求什么。然后在请求的过程中，会汇报一些列的请求的状态信息，每次到达一个节点，都会汇报一次。在最后的节点，会汇报请求的结果。
 
 ## 实现
 
@@ -163,5 +163,4 @@ git branch -d devName 删除本地分支
  
 git branch -D devName 强制删除本地分支
 
-git push origin --delete devName  删除远程分支 
-
+git push origin --delete / -d devName  删除远程分支 
