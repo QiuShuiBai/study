@@ -139,28 +139,33 @@ son.addEventListener('click', speak, false)
 
 # git常用命令
 
-git status 查看文件的状态  status: 状态
+  git status 查看文件的状态  status: 状态
 
-git diff 查看暂未暂存的提交 发生了哪些修改  diff: difference -> 不同
+  git diff 查看暂未暂存的提交 发生了哪些修改  diff: difference -> 不同
 
-git diff --staged 查看已暂存的提交
+  git diff --staged 查看已暂存的提交
 
-git log 查看版本,得到版本号
+  git log 查看版本,得到版本号
 
-git reset 版本号      重置至该版本号内容，保存已修改代码
+  git log 分支名   查看某一分支commit  (git branch -a  得到所有分支名， 可查看远程分支commit)
 
-git reset --hard 版本号    重置至该版本号内容，丢弃已修改代码
 
-git reset HEAD fileName   把fileName文件从暂存区撤销   暂存区： git add 后 ，文件所在的区域
+  git reset 版本号      重置至该版本号内容，保存已修改代码
 
-git checkout --fileName   丢弃fileName文件的修改
+  git reset --hard 版本号    重置至该版本号内容，丢弃已修改代码
 
-git commit --amend 修改上一次commit内容    amend: 修改
+  git reset HEAD fileName   把fileName文件从暂存区撤销   暂存区： git add 后 ，文件所在的区域
 
-git branch -a 查看所有分支包括远程、本地分支  a: all
+  git checkout --fileName   丢弃fileName文件的修改
 
-git branch -d devName 删除本地分支
- 
-git branch -D devName 强制删除本地分支
+  git show 版本号   查看某次commit 内容
 
-git push origin --delete / -d devName  删除远程分支 
+  git commit --amend 修改上一次commit内容    amend: 修改
+
+  git branch -a 查看所有分支包括远程、本地分支  a: all
+
+  git branch -d devName 删除本地分支
+
+  git branch -D devName 强制删除本地分支
+
+  git push origin --delete / -d devName  删除远程分支 
