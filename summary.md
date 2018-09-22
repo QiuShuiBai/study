@@ -137,6 +137,37 @@ son.addEventListener('click', speak, false)
 
 
 
+# 跨域
+
+## 解决方法
+
+- jsonp
+
+  原理：
+  >script 标签可以跨域请求的特性，由其 src 属性发送请求到服务器，服务器返回 JavaScript 代码，浏览器接受响应，然后就直接执行了，这和通过 script 标签引用外部文件的原理是一样的
+  
+  缺陷：
+  只支持get请求，原因： script请求本质就是get
+
+  实现：
+  - 创建一个script标签
+  - 创建回调函数
+  - 给script标签添加url
+  - url后添加回调函数
+  - 添加进dom运行script标签
+
+  示列：
+  ```js
+      function callback () {}
+      let script = document.createElement('script')
+      script.src = 'url?callback = callback'
+      document.getElementsByTagName('head')[0].appendChild(script)
+  ```
+  
+
+
+
+
 # git常用命令
 
   git status 查看文件的状态  status: 状态
@@ -148,7 +179,6 @@ son.addEventListener('click', speak, false)
   git log 查看版本,得到版本号
 
   git log 分支名   查看某一分支commit  (git branch -a  得到所有分支名， 可查看远程分支commit)
-
 
   git reset 版本号      重置至该版本号内容，保存已修改代码
 
@@ -168,4 +198,4 @@ son.addEventListener('click', speak, false)
 
   git branch -D devName 强制删除本地分支
 
-  git push origin --delete / -d devName  删除远程分支 
+  git push origin --delete / -d devName  删除远程分支
