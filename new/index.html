@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    function Person(name = 'zc', age = '12') {
+      this.name = name
+      this.age = age
+      // return 123
+      return {
+        sex: '男'
+      }
+    }
+    let person = new Person()
+    console.log(person)
+    function New(fn) {
+      let obj = {}
+      obj.__proto__ = fn.prototype
+      let arr = [...arguments]
+      arr.shift()
+      let result =fn.apply(obj, arr)
+      return typeof result  === 'object' ? result : obj
+    }
+    let person2 = New(Person, 'xl', 12)
+    console.log(person2)
+  </script>
+</body>
+</html>
