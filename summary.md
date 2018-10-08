@@ -124,9 +124,8 @@ son.addEventListener('click', speak, false)
 
   -  **响应**
   ```js
-    xmlhttp.onreadystatechange=function()
-    {
-      if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+    xmlhttp.onreadystatechange = function() {
+      if (xmlhttp.readyState === 4 && xmlhttp.status === 200) {
         let infos =JSON.parse(xmlhttp.responseText)
         console.log(infos)
       }
@@ -147,7 +146,7 @@ son.addEventListener('click', speak, false)
   >script 标签可以跨域请求的特性，由其 src 属性发送请求到服务器，服务器返回 JavaScript 代码，浏览器接受响应，然后就直接执行了，这和通过 script 标签引用外部文件的原理是一样的
   
   缺陷：
-  只支持get请求，原因： script请求本质就是get
+  只支持get请求，原因： script引用外部资源方式本质就是get
 
   实现：
   - 创建一个script标签
@@ -168,6 +167,52 @@ son.addEventListener('click', speak, false)
 
 
 
+
+# new 操作符
+  
+  ## 运行过程
+
+  构造函数fn  实例对象obj  参数arguments  空对象toolObj
+
+  1. new 操作中，新建了一个 空对象
+
+  2. 然后将fn的prototype赋值给toolObj的__proto__
+
+  3. 将fn内部的this强制绑定指向toolObj并执行fn函数
+
+  4. 判断fn返回值
+
+    返回值为基本类型、空类型时，实例对象为toolObj
+
+    返回值为对象时，实例对象为返回值的对象
+
+  ## 代码
+  ```js
+  function Person(name = 'zc', age = '12') {
+    this.name = name
+    this.age = age
+    return {
+      sex: '男'
+    }
+  }
+  let person = new Person()
+  function New(fn) {
+    let obj = {}
+    obj.__proto__ = fn.prototype
+    let arr = [...arguments]
+    arr.shift()
+    let result =fn.apply(obj, arr)
+    return typeof result  === 'object' ? result : obj
+  }
+  let person2 = New(Person, 'xl', 12)
+  ```
+
+
+
+
+
+
+
 # git常用命令
 
   git status 查看文件的状态  status: 状态
@@ -178,9 +223,13 @@ son.addEventListener('click', speak, false)
 
   git log 查看版本,得到版本号
 
+  git reflog 查看版本,包括git reset 的操作
+
+  git log --pretty=oneline  美化查看
+
   git log 分支名   查看某一分支commit  (git branch -a  得到所有分支名， 可查看远程分支commit)
 
-  git reset 版本号      重置至该版本号内容，保存已修改代码
+  git reset 版本号      重置至该版本号`内容，保存已修改代码
 
   git reset --hard 版本号    重置至该版本号内容，丢弃已修改代码
 
