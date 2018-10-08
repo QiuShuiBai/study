@@ -24,17 +24,15 @@
     </div>
   </div>
   <script>
-    function $Ajxa({method, url, success, fail}){
-      let xmlhttp = new XMLHttpRequest()
-      xmlhttp.open(method? method: 'GET', url, true)
-      xmlhttp.send()
-      xmlhttp.onreadystatechange = function() {
-        if (xmlhttp.readyState==4 && xmlhttp.status==200) {
-          let infos =JSON.parse(xmlhttp.responseText)
-          success && success(infos.data)
-        } else if(xmlhttp.resta==4 && xmlhttp.status!= 200) {
-          let infos =JSON.parse(xmlhttp.responseText)
-          fail && fail(infos.data)
+    function $Ajxa({method='GET', url, success, fail}) {
+      let xmlHttp = new XMLHttpRequest()
+      xmlHttp.open(method, url)
+      xmlHttp.send()
+      xmlHttp.onreadystatechange = function() {
+        if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+          success && success(JSON.parse(xmlHttp.responseText))
+        } else if (xmlHttp.readyState === 4 && xmlHttp.status !== 200) {
+          fail && fail(xmlHttp.responseText)
         }
       }
     }
@@ -44,6 +42,7 @@
         url: 'https://easy-mock.com/mock/5b67ec9c75d70b78bbc62116/goufen/goufen',
         method: 'GET',
         success(data) {
+          data = data.data
           let name = data.name
           let sex = data.sex
           document.getElementsByClassName('name')[0].innerHTML = name
