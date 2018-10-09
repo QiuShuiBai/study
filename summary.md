@@ -212,6 +212,48 @@ son.addEventListener('click', speak, false)
 
 
 
+# Object.defineProperty
+
+  通过Object.defineProperty,来实现类似const的常量
+
+  ```js
+  let CONST = {}
+  Object.defineProperty(CONST, 'test', {
+    value: 1,
+    enumerable : true,
+    configurable : false,
+    writable: false
+  })
+  CONST.test = 3
+  // CONST.TEST = 1
+  ```
+  该方法接收三个参数:
+  第一个是要修改的对象
+  第二个是对象的某个属性，如果存在则修改该属性，如果不存在，则创建
+  第三个是修改的配置
+
+  ## 第三个参数的配置
+  
+  1. value 定义的属性为，默认为undefined
+  2. enumerable 是否为可枚举属性，默认为false
+  3. configurable 是否可配置，默认为false
+  4. writable 是否可修改，默认为false
+  5. set 接收一个方法，每次修改值的时候执行
+  6. get 接收一个方法，每次取值的时候执行
+
+    注：
+    1. enumerable、configurable、writable在Object.defineProperty中默认是false，在平常书写(let obj = {} \ let obj = new Object())中为true
+    2. configurable可由true变为false，不可逆。设置为false后，其他配置不可修改
+    3. get、set方法中的this指向的是Object.defineProperty第一个参数，也就是需要配置的对象
+    4. 通过get、set来设置值的时候，其实是新创建了一个变量
+
+
+
+
+
+
+
+
 
 # git常用命令
 
