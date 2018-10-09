@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // 使用Object.defineProperty
+    // enumerable表示可以遍历的
+    let CONST = {}
+    Object.defineProperty(CONST, 'test', {
+      enumerable : true,
+      configurable : true,
+      set: function(newValue) {
+        this._value = newValue
+      },
+      get: function() {
+        console.log(this)
+        return this._value
+      }
+    })
+    CONST.test = 3
+    console.log(CONST)
+  </script>
+</body>
+</html>
