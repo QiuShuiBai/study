@@ -38,7 +38,7 @@ son.addEventListener('click', speak, false)
 ```
 使用Dom2级方法添加事件处理程序的主要好处是可以添加多个事件处理程序
 移除时的参数必须与添加处理程序时使用的参数相同，这也意味着通过addEventListener()添加的匿名函数将无法移除
-
+// TODO  同一个结点绑定两个事件
 
 
 
@@ -218,13 +218,13 @@ son.addEventListener('click', speak, false)
 
   ```js
   let CONST = {}
-  Object.defineProperty(CONST, 'test', {
+  Object.defineProperty(CONST, 'TEST', {
     value: 1,
     enumerable : true,
     configurable : false,
     writable: false
   })
-  CONST.test = 3
+  CONST.TEST = 3
   // CONST.TEST = 1
   ```
   该方法接收三个参数:
@@ -290,3 +290,7 @@ son.addEventListener('click', speak, false)
   git branch -D devName 强制删除本地分支
 
   git push origin --delete / -d devName  删除远程分支
+  
+  git remote show origin  查看远程分支和本地分支的对应关系
+
+  git remote prune origin  删除远程已经删除过的分支
