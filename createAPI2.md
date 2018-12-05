@@ -97,7 +97,7 @@ createAPI的用法很简单，下面五个步骤简单的对应了下面的五�
  2. 引入需api式调用的组件
  3. 注册createAPI
  4. 生成api
- 5. 调用
+ 5. 调用api，实例化组件
 
 ```js
 import CreateAPI from 'create-api'
@@ -229,12 +229,13 @@ function escapeReg(str, delimiter) {
 生成`api`名字的流程很简单，把组件名取出，从第一个字符开始判断，是否能和`componentPrefix`匹配，能则删除。处理后的字符再和`apiPrefix`连接，处理后的字符首字母大写，并加上`apiPrefix`前缀。
 
 
-### 调用api
+### 调用api，实例化组件
 
 当我们在组件中和在某一个js文件中`api`形式生成组件，实际上调用的函数都是`apiCreator`函数返回值`api`的`create`方法
 
 ```js
 create(config, renderFn, _single) {
+  // 前置工作
   // ...省略，功能是修正参数
 
   // 当前调用的该方法的实例
@@ -253,15 +254,17 @@ create(config, renderFn, _single) {
   const renderData = parseRenderData(config, events)
 
   let component = null
-
+  // 处理$props
   processProps(ownerInstance, renderData, isInVueInstance, (newProps) => {
     component && component.$updateProps(newProps)
   })
+  // 处理$events
   processEvents(renderData, ownerInstance)
+  // 处理$属性
   process$(renderData)
-
+  // 实例化
   component = createComponent(renderData, renderFn, options, _single)
-
+  // 父组件销毁时，api组件销毁
   if (isInVueInstance) {
     ownerInstance.$on(eventBeforeDestroy, beforeDestroy)
   }
@@ -401,7 +404,7 @@ function processProps(ownerInstance, renderData, isInVueInstance, onChange) {
   }
 }
 ```
-不解释参数就是刷流氓：
+不解释参数就是耍流氓：
 1. `ownerInstance`是生成`api`方法时定义的变量，指向父组件或指向`api组件`自身
 2. `renderData`是经过`parseRenderData`粗加工后的对象
 3. `isInVueInstance`是否有父组件
@@ -461,9 +464,14 @@ function process$(renderData) {
 ```
 
 #### 生成实例
+
 上面做了如此多的工作，都是为了处理要生成实例时，传递给Vue渲染函数的data对象。所谓磨刀不误砍柴工，接着是createAPI是如何实例化组件。
 
 `beforeHooks`存储初始化钩子被调用时传递进来的参数，在组件实例前，先运行传递给before钩子函数。在`cube-ui`中，用来检验部分不推荐单例的组件是否是单例模式生成。
+
+`ownerInsUid`为父组件的`_uid`，没有父组件则为-1。`singleMap`为单例模式下存储组件的对象。
+
+(_uid为组件实例化时Vue生成的唯一id，可查看[Vue代码][4])
 
 ```js
 function createComponent(renderData, renderFn, options, single) {
@@ -512,7 +520,7 @@ function createComponent(renderData, renderFn, options, single) {
 }
 ```
 
-
   [1]: https://github.com/cube-ui/vue-create-api/blob/master/README_zh-CN.md
   [2]: https://cn.vuejs.org/v2/guide/render-function.html#%E6%B7%B1%E5%85%A5-data-%E5%AF%B9%E8%B1%A1
   [3]: https://cn.vuejs.org/v2/api/#vm-watch
+  [4]: https://github.com/vuejs/vue/blob/dev/src/core/instance/init.js
