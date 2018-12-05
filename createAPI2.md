@@ -147,7 +147,7 @@ function install(Vue, options = {}) {
 
 ### 生成api
 
-`api`的生成是运行了`Vue.createAPI`这个方法，也就是`apiCreator`这个方法
+`api`的生成是运行了`Vue.createAPI`这个方法，方法的核心是`apiCreator`，在`apiCreator`运行后，返回的`api.create`就是后续我们实例化组件的`api`
 
 通过`apiCreator`方法引入的路径可以查看到`src/creator.js`的文件:
 ```js
@@ -158,7 +158,9 @@ function apiCreator(Component, events = [], single = false) {
   const beforeHooks = []
   // ...省略
   const api = {
-    // ...省略
+    before(hook) {
+      beforeHooks.push(hook)
+    },
     create(config, renderFn, _single) {
       //...省略
     }
@@ -168,9 +170,11 @@ function apiCreator(Component, events = [], single = false) {
 ```
 这个函数内几乎所有东西都是为`api`对象中的`create`函数服务。
 
-因为被调用时`call`关键字强制绑定`this`，所以`apiCreator`内的`this`指向的是`Vue`构造函数，而变量`singleMap`是单例模式下的一个存储器。
+因为被调用时`call`关键字强制绑定`this`，所以`apiCreator`内的`this`指向的是`Vue`构造函数，而变量`singleMap`是单例模式下的一个存储器，而`beforeHooks`是一个数组，存储初始化钩子被调用时传递进来的参数。
 
-生成的`api`的过程实际就是给`api.create`方法填入一些默认配置的过程
+`api`对象的 `before`是一个钩子函数，参数是一个函数，用来在api调用时，组件实例化之前运行传递进来的函数。（文档没有说明）
+
+生成的`api`的过程实际就是给`api.create`方法填入一些默认配置的过程。
 
 下面是`apiCreator`的三个参数
  1. 第一个是需要`api`形式调用的组件`Component`
@@ -301,7 +305,7 @@ let options = {}
     }
   }
 ```
-如果在组件中调用，那么就把父组件给保存在`options`对象中，`key`名叫`parent`。并且在父组件实例上放置一个数组，这个数组用来存储`watch`返回的取消观察函数，在父组件销毁时使用。
+如果在组件中调用，那么就把父组件给保存在`options`对象中，`key`名叫`parent`。并且在父组件实例上放置一个数组`__unwatchFns__`，这个数组用来存储`watch`返回的取消观察函数，在父组件销毁时使用。
 
 #### 兼容旧版本及粗加工config
 
@@ -343,6 +347,8 @@ function parseEvents(events) {
   
 `parseEvents`函数把`events`数组中，每一项都当成对象的键名，对应的键值是首字母大写后加上`on`前缀。最后把这个对象的引用赋值给`events`。(`camelize`函数代码在生成api名模块)
 
+因为我们是在实例化组件的时候，是把renderData当作配置项传递给Vue构造器，所以要符合相关规范。([Vue渲染函数data对象][2])
+
 ```js
 events = { click: 'onClick',  input: 'onInput' }
 props = { onClick: function() {} , ...}
@@ -358,9 +364,9 @@ props = { ... }
 return { props: { ... },  on: { click: function() {} } }
 ```
 
-#### 处理props值
+#### 处理$props
 
-在运行完兼容旧版本的`parseRenderData`方法后，我们得到了名叫一个`renderData`的对象。因为新版本中`props`的写发是在`config`中写在一个名为`$props`的对象中，所以还需要处理一下`renderData`对象。
+在运行完兼容旧版本的`parseRenderData`方法后，我们得到了名叫一个`renderData`的对象。因为新版本中`props`的写发是在`config`中写在一个名为`$props`的对象中，所以还需要处理一下`renderData`对象，把`renderData`中的`$props`和`$events`分开放入`props`和`on`对象中。
 
 ```js
 function processProps(ownerInstance, renderData, isInVueInstance, onChange) {
@@ -399,18 +405,114 @@ function processProps(ownerInstance, renderData, isInVueInstance, onChange) {
 1. `ownerInstance`是生成`api`方法时定义的变量，指向父组件或指向`api组件`自身
 2. `renderData`是经过`parseRenderData`粗加工后的对象
 3. `isInVueInstance`是否有父组件
-4. `onChange`提供给`Vue`的`$watch`方法，用于响应式更新
+4. `onChange`提供给`Vue`的`$watch`回调函数，用于响应式更新
 
 设`keyProps`、`valueProps`为`$props`中的键名、键值,`key`和`value`为父组件的键名、键值
 
 使用`Object.keys`方法拿出`$keyProps`的集合，遍历集合。
 
-若对应的`valueProps`是字符串，并且等于父组件中某一个`key`，那么把这个`key`挂在`renderData.props`上，并且值为父组件这个`key`对应的`value`。
-
-若`valueProps`不为字符串，则直接把`keyProps`挂在`renderData.props`上，并且值为`valueProps`
+`keyProps`若对应的`valueProps`是字符串，并且是父组件中的某一个`key`，那么就在`renderData.props`上添加`keyProps`，值为`value`。
 
 `watchKeys`和`watchPropKeys`这两个数组就是为了存储需要响应式更新的值：`watchKeys`每一项是`api组件`的key，`watchPropKeys`每一项是父组件的`key`，第n项对应第n项(n <= 0)。
 
+**响应式更新**： 如果`isInVueInstance`为`true`，那么`ownerInstance`是父组件。调用`ownerInstance`的`$watch`方法，若父组件中在`watchPropKeys`属性变化了的话，那么就会更新`renderData.props`中相应的值，同时触发回调函数`onChange`。然后把`$watch`返回的取消观察函数保存在前置工作生成的`__unwatchFns__`数组里，用来停止触发回调（`$watch`[文档][3]）
+```js
+(newProps) => {
+  component && component.$updateProps(newProps)
+}
+```
+`onChange`长这样，`component`是`api组件`的实例，`$updateProps`是封装了的一层调用实例的`$forceUpdate`方法。
+
+#### 处理$events
+
+`$events`的处理相对`$props`简单很多，因为没有响应式更新的地方。和处理`$props`一样，把`props`中的`$events`删掉，并把`$events`的数据挂在`renderData.on`上
+```js
+function processEvents(renderData, ownerInstance) {
+  const $events = renderData.props.$events
+  if ($events) {
+    delete renderData.props.$events
+
+    Object.keys($events).forEach((event) => {
+      let eventHandler = $events[event]
+      if (typeof eventHandler === 'string') {
+        eventHandler = ownerInstance[eventHandler]
+      }
+      renderData.on[event] = eventHandler
+    })
+  }
+}
+```
+如果`$events`中键值对中某个的`value`是字符串，那么就在父组件中把名字和这个字符串相等方法覆盖掉这个`value`
+
+#### 处理$开头的Vue相关配置项
+
+为了区分哪些是要给Vue的相关配置，所以在api调用时第一个参数`config`中需要加`$`，现需要找到这些变量，并去掉`$`后挂在`renderData`上
+```js
+function process$(renderData) {
+  // props中如果存在$开头的变量，则在props中删除，并直接挂在renderData对象上
+  const props = renderData.props
+  Object.keys(props).forEach((prop) => {
+    if (prop.charAt(0) === '$') {
+      renderData[prop.slice(1)] = props[prop]
+      delete props[prop]
+    }
+  })
+}
+```
+
+#### 生成实例
+上面做了如此多的工作，都是为了处理要生成实例时，传递给Vue渲染函数的data对象。所谓磨刀不误砍柴工，接着是createAPI是如何实例化组件。
+
+`beforeHooks`存储初始化钩子被调用时传递进来的参数，在组件实例前，先运行传递给before钩子函数。在`cube-ui`中，用来检验部分不推荐单例的组件是否是单例模式生成。
+
+```js
+function createComponent(renderData, renderFn, options, single) {
+  beforeHooks.forEach((before) => {
+    before(renderData, renderFn, single)
+  })
+  const ownerInsUid = options.parent ? options.parent._uid : -1
+  const {comp, ins} = singleMap[ownerInsUid] ? singleMap[ownerInsUid] : {}
+  if (single && comp && ins) {
+    ins.updateRenderData(renderData, renderFn)
+    // ins.$forceUpdate()
+    currentSingleComp = comp
+    return comp
+  }
+  const component = instantiateComponent(Vue, Component, renderData, renderFn, options)
+  const instance = component.$parent
+  const originRemove = component.remove
+  component.remove = function () {
+    if (single) {
+      if (!singleMap[ownerInsUid]) {
+        return
+      }
+      singleMap[ownerInsUid] = null
+    }
+    originRemove && originRemove.call(this)
+    instance.destroy()
+  }
+  const originShow = component.show
+  component.show = function () {
+    originShow && originShow.call(this)
+    return this
+  }
+  const originHide = component.hide
+  component.hide = function () {
+    originHide && originHide.call(this)
+    return this
+  }
+  if (single) {
+    singleMap[ownerInsUid] = {
+      comp: component,
+      ins: instance
+    }
+    currentSingleComp = comp
+  }
+  return component
+}
+```
 
 
-  [1]: https://www.baidu.com/
+  [1]: https://github.com/cube-ui/vue-create-api/blob/master/README_zh-CN.md
+  [2]: https://cn.vuejs.org/v2/guide/render-function.html#%E6%B7%B1%E5%85%A5-data-%E5%AF%B9%E8%B1%A1
+  [3]: https://cn.vuejs.org/v2/api/#vm-watch
