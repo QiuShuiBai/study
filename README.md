@@ -384,6 +384,6 @@ if (emptyObj.toString) // false
   git remote prune origin  删除远程已经删除过的分支
 
 
-[1]: [https://github.com/jawil/blog/issues/13]
-[2]: [https://github.com/TooBug/javascript.patterns/blob/master/chapter3.markdown]
-[3]: [https://juejin.im/post/5acd8ced6fb9a028d444ee4e]
+[1]: https://github.com/jawil/blog/issues/13
+[2]: https://github.com/TooBug/javascript.patterns/blob/master/chapter3.markdown
+[3]: https://juejin.im/post/5acd8ced6fb9a028d444ee4e
