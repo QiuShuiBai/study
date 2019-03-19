@@ -28,6 +28,8 @@ document.getElementById('clickMe').addEventListener('click', function clickMe() 
 ```
 addEventListener 第三个参数是控制事件推进方式，为true时表示为 事件捕获时调用，为false表示为 事件冒泡时调用
 
+第二个参数可以是对象，当事件触发时，会调用该对象的handleEvent函数，该函数的this执行为参数对象
+如果是正常的写法，则this执行的是事件宿主对象 => el.addEventListener('click', fn)   this -> el
 **移除事件**
 ```js
 let speak = function() {
