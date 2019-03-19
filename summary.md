@@ -169,6 +169,41 @@ son.addEventListener('click', speak, false)
 
 
 
+# 原型链
+
+见到腻了的原型链 ！！！
+
+只有函数有`prototype`, 只有对象有`__proto__`。 函数也是对象，所以函数两个都有
+
+每个函数有个默认的`prototype`属性，该属性指向一个对象，这个对象叫做**原型对象**
+
+当这个函数作为构造函数时，其实例对象有一个默认的`__proto__`属性，该属性指向**原型对象**
+
+实例对象的`__proto__`和构造函数的`prototype`都是**原型对象**的引用，所以相等
+
+```js
+function Person() {}
+let zc = new Person() // Person作为构造函数， zc作为实例对象
+console.log(zc.__proto__ === Person.prototype) // true
+// zc.__proto__ 和 Person.prototype都是原型对象的引用
+```
+
+下面是我关于Object和Function的原型之间的一些理解，有不同理解的欢迎指出:
+
+原型对象是也是一个对象，对象可以当作都是`new Object()`生成的，所以原型对象的`__proto__`等于`Object.prototype`
+
+`Object`是函数，并且可以当作是`new Function()`生成的，所以也是一个实例对象，得：`Object.__proto__`等于`Function.prototype`
+
+`Function`是函数，并且可以当作是`new Function()`生成的，所以也是一个实例对象，得：`Function.__proto__`等于`Function.prototype`
+
+万物皆对象，则`Object`到了顶级，`Object.prototype`就是一个默认的对象，不再由`Object`生成，得：`Object.prototype.__proto__`等于`null`
+
+因为`Function.prototype`是对象，所以Function能知道Object的方法、属性，得：Function instanceof Object // true
+
+因为`Object.__proto__等于Function.prototype`， 得：Object instanceof Function // true
+
+参考大神`jawil`的博客[传送门][1]
+
 
 # new 操作符
   
@@ -212,8 +247,6 @@ son.addEventListener('click', speak, false)
 
 
 
-
-
 # Object.defineProperty
 
   通过Object.defineProperty,来实现类似const的常量
@@ -235,23 +268,75 @@ son.addEventListener('click', speak, false)
   第三个是修改的配置
 
   ## 第三个参数的配置
-  
+
   1. value 定义的属性为，默认为undefined
   2. enumerable 是否为可枚举属性，默认为false
   3. configurable 是否可配置，默认为false
   4. writable 是否可修改，默认为false
   5. set 接收一个方法，每次修改值的时候执行
   6. get 接收一个方法，每次取值的时候执行
+  
+          注：
+          1. enumerable、configurable、writable在Object.defineProperty中默认是false，在平常书写(let obj = {} \ let obj = new Object())中为true
+          2. configurable可由true变为false，不可逆。设置为false后，其他配置不可修改
+          3. get、set方法中的this指向的是Object.defineProperty第一个参数，也就是需要配置的对象
+          4. 通过get、set来设置值的时候，其实是新创建了一个变量
 
-    注：
-    1. enumerable、configurable、writable在Object.defineProperty中默认是false，在平常书写(let obj = {} \ let obj = new Object())中为true
-    2. configurable可由true变为false，不可逆。设置为false后，其他配置不可修改
-    3. get、set方法中的this指向的是Object.defineProperty第一个参数，也就是需要配置的对象
-    4. 通过get、set来设置值的时候，其实是新创建了一个变量
+  ## 在对象中的关键字
+  ```js
+  let obj ={
+    get num() {
+      this._num
+    },
+    set num(param) {
+      this._num = param * 2
+    }
+  }
+  ```
+  在这个对象中，他的`num`属性相当于经过了defineProperty定义了getter和setter，如下
+  ```js
+  let obj = {}
+  Object.defineProperty(obj, num, {
+    get() {
+      return this._num
+    },
+    set(param) {
+      this.num = param * 2
+    }
+  })
+  ```
+  同时，因为defineProperty中的enumerable、configurable、writabl默认为false，所以这个属性不可枚举、不可配置
 
 
 
 
+
+
+# 对象创建的不同
+
+创建空对象的几种方式:
+
+```js
+  let obj1 = {}
+  let obj2 = new Object()
+  let obj3 = Object.create(null)
+```
+对象字面量创建和`new Object()`构造函数式创建的结果一样。但通过字面量创建的方式更快，为什么更快可以参考这个[传送门][2]。总结下就是使用`new`创建时，会通过作用域一层层找`Object`函数，同时该函数还可以接收参数，消耗时间的同时，结果不一定在预期内，如`new Object('1') / new Object(1)`
+
+`Object.create`是将传入对象当作新对象的__proto__，所以obj3可以理解为:
+  1. `obj1 = Object.create(Object.prototype)`
+  2. `obj3 = {}; obj3.__proto__ = null`
+
+`Object.create(null)` 生成的对象是一个干干净净的空对象，自身没有属性的同时，也不能通过原型链去调用`hasOwnProperty`、`toString`等方法。
+
+这种写法常见于需要得到一个极度干净且不被原型上的属性影响到的对象。如:
+```js
+let obj = {}
+if (obj.toString)  //  true 原型上有
+let emptyObj = Object.create(null)
+if (emptyObj.toString) // false
+```
+[参考资料][3]
 
 
 
@@ -265,13 +350,16 @@ son.addEventListener('click', speak, false)
 
   git diff --staged 查看已暂存的提交
 
+
   git log 查看版本,得到版本号
+
+  git log 分支名   查看某一分支commit  (git branch -a  得到所有分支名， 可查看远程分支commit)
 
   git reflog 查看版本,包括git reset 的操作
 
   git log --pretty=oneline  美化查看
-
-  git log 分支名   查看某一分支commit  (git branch -a  得到所有分支名， 可查看远程分支commit)
+  
+  git show 版本号   查看某次commit 内容
 
   git reset 版本号      重置至该版本号`内容，保存已修改代码
 
@@ -280,8 +368,6 @@ son.addEventListener('click', speak, false)
   git reset HEAD fileName   把fileName文件从暂存区撤销   暂存区： git add 后 ，文件所在的区域
 
   git checkout --fileName   丢弃fileName文件的修改
-
-  git show 版本号   查看某次commit 内容
 
   git commit --amend 修改上一次commit内容    amend: 修改
 
@@ -296,3 +382,8 @@ son.addEventListener('click', speak, false)
   git remote show origin  查看远程分支和本地分支的对应关系
 
   git remote prune origin  删除远程已经删除过的分支
+
+
+[1]: [https://github.com/jawil/blog/issues/13]
+[2]: [https://github.com/TooBug/javascript.patterns/blob/master/chapter3.markdown]
+[3]: [https://juejin.im/post/5acd8ced6fb9a028d444ee4e]
