@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    const obj = {}
+
+    Object.defineProperty(obj, 'num', {
+      get() {
+        console.log('get')
+        return this._num
+      },
+      set(nVal) {
+        console.log('set')
+        this._num = nVal
+      }
+    })
+
+    obj.num = 0 // set
+
+    const newObj = Object.create(obj)
+
+    console.log(newObj.num) // get, 0
+    newObj.num = 1 // set
+    newObj.num = 2 // set
+    console.log(newObj.num) // get, 2
+    console.log(obj.num) // get, 2
+
+    // 如果访问者的属性是被继承的，它的 get 和 set 方法会在子对象的属性被访问或者修改时被调用。
+    // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty
+  </script>
+</body>
+</html>
