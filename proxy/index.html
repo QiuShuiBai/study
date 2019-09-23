@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    console.log('---------')
+    const handler = {
+      get: function(target, key, receiver) {
+        console.log('get me')
+        return target.key
+      },
+      set: function(target, key, value, receiver) {
+        console.log('set me')
+        target.key = value
+        Reflect.set(target, key, value, receiver)
+      }
+    }
+
+    const something = { num: 0 }
+    const somethingProxy = new Proxy(something, handler)
+
+    const anotherThing = Object.create(somethingProxy)
+    console.log()
+    console.log(anotherThing.num) // get me, 0
+    anotherThing.num = 1 // set me
+    anotherThing.num = 2
+    console.log(anotherThing.num) // 2
+
+    // get me
+    // 0
+  </script>
+</body>
+</html>
