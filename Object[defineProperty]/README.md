@@ -38,3 +38,28 @@ const b = Object.create(a)
 b.name = 'b'  // 'set'
 console.log(b.name) // 'get'、'b'
 ```
+
+## 后续思考
+
+### 9.28日思考
+
+经过proxy 后，使用 `Reflect.set(target, key, value, receiver)` 修改子元素后，不再会沿着原型链触发父元素代理。假设：
+
+子对象与父对象都有某一元素，且该元素不是通过继承而来，在上面难点的相同行为下，不会触发父对象的 `get` 与 `set`
+
+实验中，首先确定该操作导致两对象为继承关系
+
+```js
+const father = {}
+const son = {}
+// ... Object.defineProperty 代理
+father.name = 'father' // 'set'
+father.canAskFather = true
+
+son.__proto__ = father
+console.log(son.canAskFather) // true 表明能通过原型链访问到 father
+```
+
+后依照 index.html的 script 中可以看到，原有元素不会触发到父对象相同元素的`get`及`set`。
+
+此时表示和 `Reflect.set` 一直

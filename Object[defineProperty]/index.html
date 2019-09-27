@@ -33,5 +33,49 @@
     // 如果访问者的属性是被继承的，它的 get 和 set 方法会在子对象的属性被访问或者修改时被调用。
     // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty
   </script>
+
+  <script>
+  // 新猜想，上面script 中是先继承后给子元素赋值
+  // 现在是先给子元素赋值，再改变子元素的 __proto__
+
+  const son = {
+    name: 'son'
+  }
+
+  const father = {}
+
+  Object.defineProperty(father, 'name', {
+    get() {
+        console.log('get')
+        return this._name
+      },
+      set(nVal) {
+        console.log('set')
+        this._name = nVal
+      }
+  })
+  Object.defineProperty(father, 'age', {
+    get() {
+        console.log('get')
+        return this._age
+      },
+      set(nVal) {
+        console.log('set')
+        this._age = nVal
+      }
+  })
+  console.clear()
+  father.name = 'father' // 'set'
+  father.age = 40 // 'set'
+  father.canAskFather = true
+
+  son.__proto__ = father
+  console.log(son.canAskFather) // true 表明能通过原型链访问到 father
+
+  console.log(son.name) // 'son' 不触发
+  son.name = 'newSon' // 不触发
+  son.age = 18 // 'set'
+  console.log(son.age) // 'get' 18
+  </script>
 </body>
 </html>
