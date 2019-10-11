@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    const PENDING = 'pendinng'
+    const RESOLVED = 'resolved'
+    const REJECTED = 'rejected'
+    function myPromise(fn) {
+      this.state = PENDING
+      this.successHandler = []
+      this.failHandler = []
+
+      const resolve = res => {
+        if (this.state === PENDING) {
+          this.state = RESOLVED
+          this.result = res
+          this.successHandler.forEach(cb => cb(res))
+        }
+      }
+
+      const reject = err => {
+        if (this.state === PENDING) {
+          this.state = REJECTED
+          this.result = err
+          this.failHandler.forEach(cb => cb(res))
+        }
+      }
+      try {
+        fn(resolve, reject)        
+      } catch (error) {
+        reject(error)
+      }
+    }
+
+    myPromise.prototype.then = function(fn) {
+      this.successHandler.push(fn)
+      if (this.state === RESOLVED) {
+        fn(this.result)
+      }
+    }
+    myPromise.prototype.catch = function(fn) {
+      this.failHandler.push(fn)
+      if (this.state === REJECTED) {      
+        fn(this.result)
+      }
+    }
+
+    let mypromise = new myPromise((resolve, reject) => {
+      setTimeout(() => {
+        resolve('success')
+      }, 1000)
+    })
+    mypromise.then(e => {
+      console.log(e)
+    }).catch(err => {
+      console.warn(err)
+    })
+  </script>
+</body>
+</html>
