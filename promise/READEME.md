@@ -36,3 +36,24 @@ function myPromise(fn) {
   fn()
 }
 ```
+
+fn运行时，可以明显看到会接收两个函数，分别是 `resolve` 和 `reject`。那么给 `myPromise` 补充上
+
+```js
+function myPromise(fn) {
+  const resolve = () => {
+  }
+  const reject = () => {
+  }
+  fn(resolve, reject)
+}
+```
+
+myPromise 的实例化后，实例对象具有 .then 方法，我们可以把该方法添加在原型链中。
+
+```js
+myPromise.prototype.then = function(fn) {
+}
+```
+
+好了，目前为止，我们自己的 `myPromise` 完成了基本骨架，从 new 到 .then，具体的逻辑让我们继续分析。
