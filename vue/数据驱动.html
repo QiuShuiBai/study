@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <div id="app">
+    {{test}}
+  </div>
+
+  <script>
+    function proxyData(data, vm) {
+      vm._data = data
+      for (const key in data) {
+        Object.defineProperty(vm, key, {
+          enumerable: true,
+          configurable: true,
+          get: function() {
+            return vm._data[key]
+          },
+          set: function(val) {
+            vm._data[key] = val
+          }
+        })
+      }
+    }
+  
+    function Dep() {
+      this.subs = []
+      this.walk = function() {
+        this.subs.forEach(sub => {
+          sub.update()
+        })
+      }
+    }
+
+    function Watch(fn) {
+      this.getter = function() {
+        Dep.target = this
+        fn()
+      }
+      this.getter()
+      this.update = function() {
+        this.getter()
+      }
+    }
+
+    function observe(data) {
+      for (const key in data) {
+        const dep = new Dep()
+        val = data[key]
+        Object.defineProperty(data, key, {
+          enumerable: true,
+          configurable: true,
+          get: function() {
+            if (Dep.target) {
+              dep.subs.push(Dep.target)
+            }
+            return val
+          },
+          set: function(newVal) {
+            val = newVal
+            dep.walk()
+          }
+        })
+      }
+    }
+  </script>
+  <script>
+
+    function MyVue(options) {
+      this._init(options)
+    }
+
+    MyVue.prototype._init = function(options) {
+      const data = options.data
+      this.$options = options
+      proxyData(data, this)
+      observe(data, this)
+      if (this.$options.el) {
+        this.$mount()
+      }
+    }
+    MyVue.prototype.$mount = function() {
+      let key = ''
+      const compile = () => {
+        const app = document.querySelector(this.$options.el)
+        key = key || app.innerText.replace(/\{\{/, '').replace(/\}\}/, '').trim()
+        app.innerText = this[key]
+      }
+      new Watch(compile)
+    }
+  </script>  
+  <script>
+    const vm = new MyVue({
+      el: '#app',
+      data: {
+        test : 1
+      }
+    })
+
+    setTimeout(() => {
+      vm.test = 3
+    }, 3000)
+  </script>
+</body>
+</html>
