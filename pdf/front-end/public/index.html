@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="origin">
+  <title>Document</title>
+</head>
+<style>
+  /* 开屏loading样式 */
+  .html-popup-content {
+    position: absolute;
+    display: block;
+    top: 50%;
+    left: 50%;
+    padding: 13px 15px 13px 13px;
+    border-radius: 7px;
+    transform: translate(-50%, -50%);
+    background: rgba(37,38,45,0.9);
+    z-index: 10000;
+  }
+  .html-loading {
+    font-size: 24px;
+    display:flex;
+    align-items:center;
+  }
+  .html-loading-spinners {
+    position: relative;
+    display: block;
+    width: 1em;
+    height: 1em;
+    animation: spinner-fade 1s steps(12, start) infinite;
+  }
+  .html-loading .html-loading-spinner, .html-toast-icon, .html-toast-tip {
+    color: #fff;
+  }
+  .html-loading-spinner {
+    position: absolute;
+    left: 44.5%;
+    top: 37%;
+    width: 2PX;
+    height: 25%;
+    border-radius: 50%/20%;
+    background-color: currentColor;
+  }
+  .html-toast-tip {
+    font-size: 15px;
+    opacity: 0.9;
+    margin-left: 8px;
+  }
+  @keyframes spinner-fade {
+    0% {
+      transform: rotate(0deg)
+    }
+    100% {
+      transform: rotate(360deg)
+    }
+  }
+</style>
+<body>
+  <div class="wrapper">
+    
+    <div id="pdf-wrapper">
+      <canvas id="the-canvas"></canvas>
+    </div>
+  </div>
+
+  <div class="html-popup-content">
+    <div class="html-loading">
+      <span class="html-loading-spinners">
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+        <i class="html-loading-spinner"></i>
+      </span>
+      <div class="html-toast-tip">初始化...</div>
+    </div>
+  </div>
+  <script>
+    function showIndexPageLoading() {
+      const loading = document.querySelector('.html-popup-content')
+      loading.style.display = 'block'
+      let loadingSpinner = document.getElementsByClassName('html-loading-spinner')
+      let transform = 0
+      let item
+      for (let index = 0; index < 12; index++) {
+        transform = 'rotate(' + (30 * index - 5) + 'deg) translateY(-150%)'
+        item = loadingSpinner[index].style
+        item.transform = transform
+        item.opacity = 1 / 12 * (index + 1)
+      }
+      item = null
+      loadingSpinner = null
+    }
+    showIndexPageLoading()
+  </script>
+</body>
+</html>
