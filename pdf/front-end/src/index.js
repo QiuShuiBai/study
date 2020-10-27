@@ -1,30 +1,25 @@
 import './index.styl'
 
-import { rendPdf } from './render'
-import { hideLoading } from './utils/loading'
-
-rendPdf({
+import * as PDF from './render'
+import { baseParams } from './utils/params'
+PDF.loadPDF({
   el: '#pdf-wrapper'
 }).then((loadingTask) => {
-  hideLoading()
-  loadingTask.promise.then(function(pdf) {
-    pdf.getPage(1).then(function(page) {
-      var scale = 1.5;
-      var viewport = page.getViewport({ scale: scale, });
 
-      var canvas = document.getElementById('the-canvas');
-      console.log(canvas)
-      var context = canvas.getContext('2d');
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
+  loadingTask.promise.then(async function(pdfDocument) {
 
-      var renderContext = {
-        canvasContext: context,
-        viewport: viewport
-      };
-      page.render(renderContext);
-    });
-  });
+    baseParams.pdfPageCount = pdfDocument.numPages
+
+    const scaledViewport = await PDF.getPdfViewPort(pdfDocument)
+
+    PDF.initPagesConfig(scaledViewport) // 初始化，每一项为 pdf 页
+
+    PDF.getVisiblePages(1) // 得到需要渲染的页数
+
+    PDF.initDomStruct() // 根据需要渲染的页数，初始化dom结构
+
+    PDF.renderPDF(pdfDocument) // 渲染 pdf
+  })
 })
 
 
