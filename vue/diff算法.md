@@ -12,15 +12,15 @@ updateComponent = () => {
 }
 ```
 
-该方法会把 组件（包括子组件）通过 `_render` 方法 转换成 vnode，同时在 `_update` 方法中进行组件 patch 以更新视图。而 `diff算法` 就是在[patch](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L709)  的过程中。
+该方法会把该组件（包括子组件）通过 `_render` 方法 转换成 vnode，同时在 `_update` 方法中进行组件 patch 以更新视图。而 `diff算法` 就是在[patch](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L709)  的过程中。
 
 （图.....）
 
 ## 关于 diff 的前置了解
 
-diff 发生在 patch 方法，该方法运行在 _update 中，因为在 $mount 挂载后，组件实例上已经有了 `_vnode` 结点所以接收了 旧、新两个vnode 进行diff
+diff 发生在 patch 方法中，该方法通过_update 调用。因为经过 $mount 挂载后，组件实例上已经有了 `_vnode` 结点，所以 patch 方法接收了同一个组件的旧、新两个vnode 当作参数。
 
-ps: 因为组件的必须要有一个根结点且只能有一个根结点，所以我们的组件 vnode 只有一个，这是我们 diff 算法的前提
+ps: 组件的必须有一个根结点且只能有一个根结点，所以组件 vnode 是一个对象而不是一个数组，这是我们 diff 算法的前提
 
 ```js
 const prevVnode = vm._vnode
@@ -31,23 +31,21 @@ if (!prevVnode) {
 }
 ```
 
-### patch 中的关键方法
+### diff 中的关键方法
 
-diff 的过程中有几个函数至关重要 [sameVnode](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L35-L50)、[updateChildren](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L404-L474)、[patchVnode](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L501-L574)。
+diff 的过程中有几个函数至关重要：[sameVnode](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L35-L50)、[updateChildren](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L404-L474)、[patchVnode](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L501-L574)。接下来一一简单介绍：
 
-我们知道组件是具有嵌套关系的，自然组件转换为 vnode 后，vnode 也具有这种关系。
+`sameVnode` 是用来比较 新旧vnode 是否部分相同，若是部分相同则调用 `patchVnode` 进行深层次的比较。
 
-`sameVnode` 是用来比较新旧 vnode 是否部分相同，若是则有调用 `patchVnode` 进行深层次的比较。
+`patchVnode` 是用来 diff 新旧vnode 子列表的方法。根据子列表的有无，选择对 dom 进行增加、删除，或调用`updateChildren`方法对子列表进行 diff
 
-`patchVnode` 是用来 diff 新旧 vnode 的入口函数。其中做了一些简单的 diff 过程，同时再满足一些条件后，调用`updateChildren`方法进行子节点 diff
+`updateChildren` 是用来对 新旧vnode 子列表进行 diff 的方法。通过调用 `sameVnode` 把新旧子列表中结点当作新旧根结点，传参数给`patchVnode` 递归进行深层次的diff。
 
-`updateChildren` 是用来对子 vnode 列表进行 diff 的方法。通过调用 `sameVnode` 取出值得比较的新旧 vnode后，再调用 `patchVnode` 进行深层次的调用。
-
-sameVnode 是辅助函数，patchVnode 和 updateChildren 则递归调用（禁止套娃）。
+总结：sameVnode 是辅助函数，patchVnode  和 updateChildren 递归调用（禁止套娃）。
 
 ### sameVnode 辅助函数
 
-这个函数是我们进行 diff 的关键，首先判断两个 vnode 的 `key` 是否相同，其次判断tag、isComment、dat、input类型等属性；isAsyncPlaceholder 是 ssr 渲染时的异步占位符结点，此时判断异步组件的加载函数是否相同，且 b 参数的异步加载没有失败。
+这个函数是我们进行 diff 的关键，首先判断两个 vnode 的 `key` 是否相同，其次判断tag、isComment、dat、input类型等属性；isAsyncPlaceholder 是 ssr 渲染时的异步占位符结点，此时判断异步组件的加载函数是否相同，且 b 参数的异步加载没有失败。（没用 srr 时忽略 isAsyncPlaceholder 逻辑）
 
 ```js
 function sameVnode (a, b) {
@@ -68,13 +66,13 @@ function sameVnode (a, b) {
 }
 ```
 
-函数只判断了两个 vnode 的部分属性，不要求所有属性全部相等。
+ps: 函数只判断了两个 vnode 的部分属性，不要求所有属性全部相等。
 
-## patch
+## patch —— 开始 diff
 
 整个 diff 从 [patch](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L700) 这个函数就已经开始了。
 
-在 patch 里有两种情况，新旧结点不同，和新旧结点相同。
+首先便是判断是否值得进行diff。判断的方法很简单，通过上面说到的 `sameVnode` 方法。这里有两种情况——新旧结点不同，和新旧结点相同。
 
 ```js
 const isRealElement = isDef(oldVnode.nodeType) // 此时 oldVnode 为虚拟结点，没有nodeType，所以为 false
@@ -92,13 +90,13 @@ if (!isRealElement && sameVnode(oldVnode, vnode)) {
 }
 ```
 
-不同：可以看到，通过 `sameVnode` 判断新旧结点不同时，简单粗暴的直接创建新的，删除旧的。
+不同：可以看到，vue 会简单粗暴的直接创建新的，删除旧的，省时省力。比如一个组件更新前以 `div` 为根结点，更新后以 `ul` 为根结点，得出 sameVnode 为 `false`，在 vue 的策略下，其子结点没有下一步 diff 的必要。
 
 相同：则调用上面介绍的 patchVnode 函数，深入 diff 新旧结点的 子vnode。
 
 此时可以看出，vue 的 diff 算法是 `同层比较`。如果同一层级不能被 `sameVnode` 判断为 true，则没有往子结点进行 diff 的必要，会直接更新。
 
-### patchVnode
+## patchVnode
 
 首先定义 elm ，这个变量是组件的挂载 Dom，再取出新旧子结点列表。从这里开始，只要变量名中有 `old` 字样，那么就代表是旧的内容，如 `oldCh`代表旧子结点列表。
 
@@ -153,24 +151,47 @@ patchVnode 用来判断新旧 vnode 的子结点列表情况。根据是有否�
 
 4. 新无，旧无。若是文本结点的话，把文本置为 `空字符串`
 
-### updateChildren
+目前为止，patch 判断新旧 vnode 不值得深层次比较，会对 dom 进行更新，而 patchVnode 会根据子列表的有无，对 dom 进行更新。而当新旧子列表都存在时，会调用 updateChildren 进行判断。
 
-updateChildren 就是对子结点列表，进行 diff 的过程。patch 及 patchVnode 方法对比的是新旧根结点，结点数量是`1对1`。而 updateChildren 是对根结点的子结点列表进行新旧diff，结点数量是`多对多`的关系。
+## updateChildren
+
+updateChildren 就是对子结点列表进行 diff 的过程。整个方法目的主要是挑选出“新旧结点”，当做新旧根结点进行 patchVnode 的调用。重点是如何找出“新旧结点”
 
 ps: 因核心处代码太多，就不贴代码了。建议打开[相关代码链接](https://github.com/vuejs/vue/blob/dev/src/core/vdom/patch.js#L424-L467)对照着看。
 
-先简要说明一下该方法的diff逻辑：首先通过 `sameVnode` 要找到相似的新旧子结点。把这新旧子结点当作根结点，递归调用 patchVnode 进行深层次比较。由父到子进行 diff。而 updateChildren 的关键便是通过 `sameVnode` 找出相似的结点，以便于最大限度的复用旧结点逻辑。接下来重点描述如果找出相似结点。
+### 变量定义
 
-分别给新旧列表设置了首位指针，分别指向 “新首、新尾、旧首、旧尾” 四个结点
+方法首先分别给新旧列表设置了4个索引，分别指向 “新首、新尾、旧首、旧尾” 对应的 vnode。同时根据这四个索引，赋值了4个对应 vnode 的变量。
 
 ```js
 let oldStartIdx = 0
 let newStartIdx = 0
 let oldEndIdx = oldCh.length - 1
 let newEndIdx = newCh.length - 1
+
+let oldStartVnode = oldCh[0]
+let oldEndVnode = oldCh[oldEndIdx]
+let newStartVnode = newCh[0]
+let newEndVnode = newCh[newEndIdx]
 ```
 
-每一个新指针指向的结点，都要比对两个旧指针指向的结点。反之，旧指针的逻辑也一致。共会经历5种比较方式：
+### 比较方式
+
+每一个新索引指向的结点，都要比对两个旧索引指向的结点。反之，旧索引的逻辑也一致。每次循环，这4个索引中总有索引的位置会移动，首尾索引向中间靠拢。当确保新结点全与旧结点遍历完、或旧结点全与新结点遍历完，则退出子结点遍历。
+
+```js
+// 省略
+while(oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+  // .. 省略
+  if (isUndef(oldStartVnode)) {}  // 忽略，暂时用不上
+  else if (isUndef(oldEndVnode)) {} // 忽略，暂时用不上
+  else if (sameVnode(oldStartVnode, newStartVnode)) {} // 旧首与新首
+  else if (sameVnode(oldEndVnode, newEndVnode)) {} // 旧尾与新尾
+  else if (sameVnode(oldStartVnode, newEndVnode)) {} // 旧首与新尾
+  else if (sameVnode(oldEndVnode, newStartVnode)) {} // 旧尾与新首
+  else {} // 特殊遍历
+}
+```
 
 1. 旧首 与 新首比较
 
@@ -182,11 +203,134 @@ let newEndIdx = newCh.length - 1
 
 5. 特殊遍历
 
+### sameVnode 为 true
+
+我们从“同首”，和“首尾”两种情况来介绍一下 sameVnode 为 `true` 会发生什么。前四种的逻辑大同小异。
+
+同首：如果 `sameVnode` 为 true，证明这两个结点是相似结点，有值得比较的必要。同时把新旧 vnode 当做根结点传入 patchVnode，递归调用了 patchVnode 进行是否有子列表流程。当 patchVnode 方法结束后，新旧首结点就已经 diff 完毕，不再需要进行判断了。之后新旧首索引都会向后移动一格，更新当前的新旧首结点。while 循环了一次，进行下一轮循环。
+
+旧首、新尾：与上面的前置流程类似，当新旧结点 patchVnode 完毕后，多一步移动 dom 的操作。因为当前 dom 的顺序是以 oldVnode 顺序来的，需要更新到 新vnode 的顺序，所以多了调用 `insertBefore` 方法的步骤。之后旧首索引后退，新尾索引前进。根据索引位置更新对应的 vnode 变量。
+
 ```js
-// 省略
-else if (sameVnode(oldStartVnode, newStartVnode)) {} // 旧首与新首
-else if (sameVnode(oldEndVnode, newEndVnode)) {} // 旧尾与新尾
-else if (sameVnode(oldStartVnode, newEndVnode)) {} // 旧首与新尾
-else if (sameVnode(oldEndVnode, newStartVnode)) {} // 旧尾与新首
-else {} // 特殊遍历
+// 同首
+if (sameVnode(oldStartVnode, newStartVnode)) {
+  patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+  oldStartVnode = oldCh[++oldStartIdx]
+  newStartVnode = newCh[++newStartIdx]
+}
+
+// 旧首、新尾
+if (sameVnode(oldStartVnode, newEndVnode)) {
+  patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
+  canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
+  oldStartVnode = oldCh[++oldStartIdx]
+  newEndVnode = newCh[--newEndIdx]
+}
+```
+
+### 特殊遍历
+
+我们知道了前四种是对首位进行对比，第五种对比方式则是补全剩下遗漏的情况，类似于整体遍历。
+
+```js
+else {
+  if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
+  idxInOld = isDef(newStartVnode.key)
+    ? oldKeyToIdx[newStartVnode.key]
+    : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx)
+  if (isUndef(idxInOld)) { // New element
+    createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
+  } else {
+    vnodeToMove = oldCh[idxInOld]
+    if (sameVnode(vnodeToMove, newStartVnode)) {
+      patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+      oldCh[idxInOld] = undefined
+      canMove && nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm)
+    } else {
+      // same key but different element. treat as new element
+      createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
+    }
+  }
+  newStartVnode = newCh[++newStartIdx]
+}
+```
+
+首先会从 oldVnode 列表中，根据 key 去生成一个 map 对象，是 oldVnode.key 与列表索引的映射。如果结点没 key，则不添加进 oldKeyToIdx 中。
+
+```js
+oldKeyToIdx = {
+  // ...
+  [oldVnode.key]: index
+}
+```
+
+然后根据当前新首结点，得出 idxInOld 变量，该变量是一个 oldVnode 的索引。该变量得出过程：首先判断新首结点是否有 key
+
+1. 如果有：从 oldKeyToIdx 这个对象中取出对应 key 的索引，若对象中没有该 key 则为 undefined。
+
+2. 如果没有：走 findIdxInOld 函数。函数很简单，从剩下的旧结点中，遍历得到返回与新结点 `sameVnode` 的旧结点。若剩下的的旧结点，没有一个相似结点，函数默认返回 undefined
+
+```js
+function findIdxInOld (node, oldCh, start, end) {
+  for (let i = start; i < end; i++) {
+    const c = oldCh[i]
+    // ps: node 为新结点，c为旧结点。此时node的 key 为 undefined，因为不为 undefined 时会走逻辑 1
+    if (isDef(c) && sameVnode(node, c)) return i
+  }
+}
+```
+
+这样我们拿到了 新首结点，和 oldVnode 的在旧列表结点的索引 idxInOld（可能为undefined）。这样又开始分为两种情况：
+
+1. idxInOld 为 undefined，说明旧结点列表中没有相似结点，直接根据 新vnode 添加新的 dom
+
+2. idxInOld 存在，根据这个索引，从 oldVnode 列表中取出对应的 oldVnode，并进行下一步判断
+
+```js
+vnodeToMove = oldCh[idxInOld]
+if (sameVnode(vnodeToMove, newStartVnode)) {
+  patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+  oldCh[idxInOld] = undefined
+  canMove && nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm)
+} else {
+  // same key but different element. treat as new element
+  createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
+}
+```
+
+这里首先通过 `sameVnode` 判断是否值得深层次 diff。这个 if 是因为，我们的 oldVnode 可能是从 `oldKeyToIdx` map对象中获取出来的，而这个对象中，只判断了 key，没有判断其他逻辑，所以需要通过 `sameVnode` 更进一步值得判断。
+
+如果此处 `sameVnode` 为false，和 patch 方法一样，直接根据 新vnode 创建 dom。
+
+为 true 时和上述 4 中情况一样，当作根结点进行 列表diff。因为不是根据旧首尾索引得到的 oldVnode，所以把这个旧结点赋值为 `undefined`。不删除的原因是删除会旧指针指向。同时在下一次循环中，遍历到了这个 undefined 结点，会进行跳过。（updateChildren 方法最开始进行循环的时候）
+
+```js
+if (isUndef(oldStartVnode)) {
+  oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
+} else if (isUndef(oldEndVnode)) {
+  oldEndVnode = oldCh[--oldEndIdx]
+}
+```
+
+### 循环结束
+
+整个 `updateChildren` 对子结点的 diff 进行完后，还需要处理一些场景值。回顾一下我们开始时 while 循环的条件：
+
+```js
+while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {}
+```
+
+当代表的新结点的索引或代表着旧结点的索引，一类首位相交时就结束。此时可能会有两种情况：新结点没 diff 完或旧结点没 diff 完。
+
+新结点没diff完：没有diff完的结点是新增的结点，又因为索引是由两端向中间走的，所以只要把新结点转换成真实dom 并根据索引插入进 dom 中就好。
+
+旧结点没diff完：这个很简单，没 diff 的说明不需要了，删除即可。
+
+```js
+if (oldStartIdx > oldEndIdx) {
+  refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
+  addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
+} else if (newStartIdx > newEndIdx) {
+  removeVnodes(oldCh, oldStartIdx, oldEndIdx)
+}
 ```
