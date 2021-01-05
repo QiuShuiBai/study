@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    class Super {
+      constructor(params = {}, that) {
+        this.name = params.name
+        this.age = params.age
+        this.country = 'America'
+      }
+      eat(foot) {
+        console.log('I can eat ', foot)
+      }
+    }
+
+    class Sub extends Super{
+      constructor(params = {}) {
+        super(params)
+        this.sex = params.sex
+        this.city = params.city
+        this.country = params.country
+      }
+      song() {
+        console.log('I can sing ', song)
+      }
+    }
+
+    const person = new Sub({
+      sex: 'boy',
+      age: '24',
+      name: 'ZC',
+      city: 'Beijing',
+      country: 'China'
+    })
+    person.eat('apple', person)
+    console.log(person)
+  </script>
+</body>
+</html>
