@@ -334,3 +334,188 @@ if (oldStartIdx > oldEndIdx) {
   removeVnodes(oldCh, oldStartIdx, oldEndIdx)
 }
 ```
+
+## 实操
+
+让我们来通过一个小 demo 演示一下，假设我们的组件长这样
+
+```html
+<div>
+  <p>列表</p>
+  <ul>
+    <li v-for="item in arr" :key="item">{{item}}</li>
+  </ul>
+</div>
+```
+
+我们的 arr 数据变更前为 `[1, 2, 3]`， 变更后为 `[3, 2, 'a', 1]` 反转一下后，中间增加了一个值
+
+```js
+// 变更前
+this.arr = [1, 2, 3]
+// 变更后
+this.arr = [3, 2, 'a', 1]
+```
+
+arr 改变后，触发 patch 方法，方法通过sameVnode 判断组件新旧 vnode，此时经过 sameVnode 判断新旧结点得出 true，调用 `patchVnode` 子结点的 diff
+
+```js
+// patch 方法内的判断
+if (!isRealElement && sameVnode(oldVnode, vnode)) {
+  patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
+}
+
+
+// sameVnode 判断部分
+return (
+  a.key === b.key && (
+    (
+      a.tag === b.tag &&
+      a.isComment === b.isComment &&
+      isDef(a.data) === isDef(b.data) &&
+      sameInputType(a, b)
+    ) || (
+      isTrue(a.isAsyncPlaceholder)
+      // 省略
+    )
+  )
+)
+
+// 很简单得出 sameVnode 为 true
+return (
+  undefined === undefined && (
+    (
+      'div' === 'div' &&
+      false === false &&
+      false === false &&
+      true
+    ) || (
+      false
+    )
+  )
+)
+```
+
+patchVnode 对当前子列表会进行一些判断，在当前的结构下，会直接会进入到 updateChildren 部分
+
+```js
+const oldCh = oldVnode.children
+const ch = vnode.children
+if (isDef(oldCh) && isDef(ch)) {
+  if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
+}
+
+// 新旧 vnode 结构，pVnode 指的是 p 标签的 vnode，ulVnode 是 ul 标签的
+vnode = {
+  children: [
+    pVnode,
+    ulVnode
+  ],
+  text: undefined
+}
+```
+
+updateChildren 中，我们快进到 while 循环中，查看是如何对子结点列表进行 diff
+
+```js
+while(oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+  // .. 省略
+  if (isUndef(oldStartVnode)) {}  // 忽略，暂时用不上
+  else if (isUndef(oldEndVnode)) {} // 忽略，暂时用不上
+  else if (sameVnode(oldStartVnode, newStartVnode)) {} // 旧首与新首
+  else if (sameVnode(oldEndVnode, newEndVnode)) {} // 旧尾与新尾
+  else if (sameVnode(oldStartVnode, newEndVnode)) {} // 旧首与新尾
+  else if (sameVnode(oldEndVnode, newStartVnode)) {} // 旧尾与新首
+  else {} // 特殊遍历
+}
+```
+
+第一个进行判断的，是我们 `<p>列表</p>` 结点的 新旧vnode。
+
+```js
+// 新旧 vnode 结构
+vnode = {
+  tag: 'p',
+  text: undefined,
+  children: [{text: '列表'}]
+}
+
+else if (sameVnode(oldStartVnode, newStartVnode)) {
+  patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
+  oldStartVnode = oldCh[++oldStartIdx]
+  newStartVnode = newCh[++newStartIdx]
+}
+```
+
+很明显 `sameVnode` 为 true，进入到 patchVnode 的流程，因为新旧 vnode 都有子结点 —— 文本结点 `列表`，又会再次重复 updateChildren -> patchVnode。此时 patchVnode 判断，文本结点有 text，且新旧文本内容相同，所以 patchVnode 不进行下一步判断。文本结点的 patchVnode 结束后，退出到 p 标签的 updateChildren 部分，结束后再退出到 patchVnode pVnode 部分。
+
+```js
+if (isUndef(vnode.text)) {
+} else if (oldVnode.text !== vnode.text) {
+  nodeOps.setTextContent(elm, vnode.text)
+}
+```
+
+此时p标签 patchVnode 结束。索引向下移动，while 进入到第二次循环。开始对 ul 进行 patchVnode。
+
+我们快进到 ul 结点子列表的diff。
+
+```js
+// 这是 oldVnode 结点结构
+// this.arr = [1, 2, 3]  旧
+oldVnode = {
+  children: [
+    { tag: 'li', key: 1 , children: [{ text: 1 }] },
+    { tag: 'li', key: 2 , children: [{ text: 2 }] },
+    { tag: 'li', key: 3 , children: [{ text: 3 }] }
+  ]
+}
+
+// this.arr = [3, 2, 'a', 1]  新
+newVnode = {
+  children: [
+    { tag: 'li', key: 3 , children: [{ text: 3 }] },
+    { tag: 'li', key: 'a' , children: [{ text: 'a' }] },
+    { tag: 'li', key: 2 , children: [{ text: 2 }] },
+    { tag: 'li', key: 1 , children: [{ text: 1 }] }
+  ]
+}
+```
+
+根据sameVnode方法，我们只有判断key就好了，因为tag、data等，新旧结点都是一致的。现在让我们开始愉快的diff：
+
+根据 旧首 vs 新首， 旧尾 vs 新尾，旧首 vs 新尾，旧尾 vs 新首 顺序类型。我们最开始会走到 旧首 vs 新尾，判断 key 为 1 的vnode。patchVnode的过程不再重复。方法结束后，直接复用 dom，然后移动到最新位置即可。
+
+```js
+patchVnode(oldStartVnode, newEndVnode)
+canMove && nodeOps.insertBefore( /..省略/ )
+oldStartVnode = oldCh[++oldStartIdx]
+newEndVnode = newCh[--newEndIdx]
+```
+
+旧首指针下移，新尾指针上移。key 为 2 的 vnode 和上述一样，我们先跳过。
+
+此时 oldStartIdx／endStartIdx 指向 key 为 3 的 oldVnode，newStartIdx 指向 key 为 3 的 vnode。两结点进行 patchVnode，结束后，oldStartIdx 下移。while 判断时 oldStartIdx 大于 oleEndIdx，循环退出。
+
+while 退出后，key 为 'a' 的结点没有被遍历到，但是不用担心！接下来就对这种情况进行处理。方法判断是否还剩余没有进行 diff 结点，如果还有则直接添加在 dom 里即可。
+
+```js
+if (oldStartIdx > oldEndIdx) {
+  refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
+  addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
+}
+```
+
+## v-for 中 各种 key 会发生的行为
+
+接下来让我讨论一下，最常使用的 key 的地方 —— v-for 循环列表中，使用各种 key 时，diff 的区别
+
+### 唯一值
+
+使用唯一值当作 key 的好处很多，如果 key 变了 vue 会直接判断需要对组件进行替换
+
+### 使用 index 做为 key
+
+### 不写 key
+
+### 随机数 key
