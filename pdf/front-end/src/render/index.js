@@ -1,6 +1,7 @@
-import { baseParams, dynamicParams } from '../utils/params'
+import { baseParams } from '../utils/params'
 import * as dom from '../utils/dom'
 import { PDFPageView } from '../pdf'
+
 const urlFast = 'http://0.0.0.0:3000/heiheihei'
 const urlSlow = 'http://0.0.0.0:3000/hahaha'
 
@@ -28,6 +29,7 @@ export function loadPDF(options) {
 
 export async function getPdfViewPort(pdfDocument) {
 
+  baseParams.pdfDocument = pdfDocument
   const pdfPage = await pdfDocument.getPage(1)
 
   const viewport = pdfPage.getViewport({ scale: 1 }) // pdf的宽高
@@ -44,8 +46,9 @@ export async function getPdfViewPort(pdfDocument) {
     rotation = 90
   }
 
-  const scaledViewport = pdfPage.getViewport({ scale: scale, rotation: rotation })
+  const scaledViewport = pdfPage.getViewport({ scale: scale * 4, rotation: rotation })
 
+  baseParams.scaledViewport = scaledViewport
   return scaledViewport
 }
 
@@ -55,14 +58,14 @@ export function initPagesConfig(scaledViewport) {
 
   // this.divWidth = (this.horizontal ? this.bodyClientWidth : Math.floor(scaledViewport.width)) + 'px'
   // this.divHeight = (this.horizontal ? this.bodyClientHeight : Math.floor(scaledViewport.height)) + 'px'
-  baseParams.divWidth = baseParams.bodyClientWidth
-  baseParams.divHeight = baseParams.bodyClientHeight
+  baseParams.divWidth = Math.floor(scaledViewport.width / 4)
+  baseParams.divHeight = Math.floor(scaledViewport.height / 4)
 
   PDFPageView.prototype.scaledViewport = scaledViewport
 
   for (let i = 0, len = pdfPageCount; i < len; i++) {
     pages[i] = new PDFPageView({
-      pageNum: i + 1
+      pageNum: i
     })
   }
 
@@ -73,14 +76,15 @@ export function getVisiblePages(index) {
   // index = this.vertical ? this.pdfPageCount - index : index
   const pdfPageCount = baseParams.pdfPageCount
 
-  if (!dynamicParams.count) {
+  if (!baseParams.visibleCount) {
     const _count = Math.max(10, Math.floor(baseParams.el.clientHeight / baseParams.divHeight))
-    baseParams.visibleCount = _count + (_count % 2 === 1)
+    const visibleCount = _count + (_count % 2 === 1)
+    baseParams.visibleCount = visibleCount < baseParams.pdfPageCount ? visibleCount : baseParams.pdfPageCount
   }
 
   const visibleCount = baseParams.visibleCount
-  dynamicParams.oldStart = dynamicParams.start
-  dynamicParams.oldEnd = dynamicParams.end
+  baseParams.oldStart = baseParams.start
+  baseParams.oldEnd = baseParams.end
 
   let start = Math.max(0, index - visibleCount / 2)
   let end = Math.min(start + visibleCount, pdfPageCount)
@@ -88,8 +92,8 @@ export function getVisiblePages(index) {
     start = Math.max(0, end - visibleCount)
   }
 
-  dynamicParams.start = start
-  dynamicParams.end = end
+  baseParams.start = start
+  baseParams.end = end
 }
 
 export function initDomStruct() {
@@ -97,19 +101,134 @@ export function initDomStruct() {
   if (!baseParams.finishInitDom) {
     baseParams.finishInitDom = true
     dom.createCanvas(baseParams.el, visibleCount)
-    dom.createBlockDom(baseParams.el)
+    const blockDom = dom.createBlockDom(baseParams.el)
+    baseParams.preDom = blockDom.preDom
+    baseParams.postDom = blockDom.postDom
   }
+
+  let preDom = baseParams.preDom
+  let postDom = baseParams.postDom
+
+  const { start, end, pdfPageCount, divHeight } = baseParams
+  preDom.style.height = start * divHeight + 'px'
+  postDom.style.height = (pdfPageCount - end) * divHeight + 'px'
+  preDom = null
+  postDom = null
 }
 
-export function renderPDF(pdfDocument) {
-  const pages = baseParams.pages
+export function renderPDF() {
+  const { pages, pdfDocument, start, end } = baseParams
   const canvasArr = document.querySelectorAll('.the-canvas')
 
-  for (let i = dynamicParams.start, len = dynamicParams.end; i < len; i++) {
+  for (let i = start, len = end; i < len; i++) {
     if (!pages[i].drew) {
-      pdfDocument.getPage(pages[i].pageNum).then(pdfPage => {
-        pages[i].draw(pdfPage, canvasArr[i - dynamicParams.start])
+      pdfDocument.getPage(pages[i].pageNum + 1).then(pdfPage => {
+        pages[i].draw(pdfPage, canvasArr[i - start])
       })
     }
   }
+}
+
+function scrollEnd() {
+  let el = baseParams.el
+  const { divHeight } = baseParams
+
+  let index = Math.floor(el.scrollTop / divHeight)
+  if (index === baseParams.index) return
+
+  baseParams.index = index
+
+  // const spacing = el.scrollTop - (Math.floor(el.scrollTop / divHeight)) * divHeight
+
+  getVisiblePages(index)
+
+  if (baseParams.oldEnd === baseParams.end) return
+
+  const sameIndex = diffIndex()
+
+  cleanup(sameIndex)
+
+  initDomStruct()
+
+  replaceDom(sameIndex)
+
+  el = null
+}
+
+function diffIndex() {
+  const { start, end, oldStart, oldEnd } = baseParams
+  let sameIndex = []
+  if (start > oldStart) {
+    if (start <= oldEnd) {
+      sameIndex = [start, oldEnd, 'down']
+    }
+  } else if (start < oldStart) {
+    if (end > oldStart) {
+      sameIndex = [oldStart, end, 'up']
+    }
+  }
+  return sameIndex
+}
+
+function cleanup(sameIndex) {
+  const { start, oldStart, end, oldEnd, pages } = baseParams
+  let cleanStart = 0
+  let cleanEnd = 0
+  if (sameIndex.length === 0) {
+    // 没有一样的序号，全部清楚
+    cleanStart = oldStart
+    cleanEnd = oldEnd
+  } else if (sameIndex[2] === 'up') {
+      cleanStart = end
+      cleanEnd = oldEnd
+  } else if (sameIndex[2] === 'down') {
+    cleanStart = oldStart
+    cleanEnd = start
+  } 
+  for (let i = cleanStart; i < cleanEnd; i++) {
+    pages[i].cleanup()
+  }
+}
+function replaceDom(sameIndex) {
+  if (sameIndex.length === 0) return
+  const { start, oldStart, end, oldEnd, container, pages } = baseParams
+  let replaceStart = 0
+  let replaceEnd = 0
+  if (sameIndex[2] === 'up') {
+    replaceStart = end - oldStart
+    replaceEnd = oldEnd - oldStart
+  } else if (sameIndex[2] === 'down') {
+    replaceStart = oldStart - oldStart
+    replaceEnd = start - oldStart
+  }
+  console.log(sameIndex, replaceStart, replaceEnd)
+  let pdfWraps = document.querySelectorAll('.the-wrapper')
+
+  if (sameIndex[2] === 'up') {
+    for (let i = replaceStart; i < replaceEnd; i++) {
+      container.insertBefore(pdfWraps[i], container.firstChild)
+    }
+  } else if (sameIndex[2] === 'down') {
+    for (let i = replaceStart; i < replaceEnd; i++) {
+      container.insertBefore(pdfWraps[i], null)
+    }
+  }
+  renderPDF()
+}
+
+export function listerScroll() {
+  let el = baseParams.el
+
+  let timer = null
+
+  el.addEventListener('scroll', function(e) {
+    console.log(e)
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      // console.log('scrollEnd')
+      scrollEnd()
+    }, 200)
+  })
+
+  el = null
 }

@@ -24,7 +24,7 @@ app.use(async (ctx, next) => {
 
 router.get('/heiheihei', async (ctx, next) => {
   let data = await new Promise((resolve) => {
-    fs.readFile("./heiheihei.pdf", function (error, data) {
+    fs.readFile("./啦啦.pdf", function (error, data) {
       resolve(data)
     })
   })
@@ -38,7 +38,7 @@ router.get('/heiheihei', async (ctx, next) => {
 
 router.get('/hahaha', async (ctx, next) => {
   let data = await new Promise((resolve) => {
-    fs.readFile("./heiheihei.pdf", function (error, data) {
+    fs.readFile("./啦啦.pdf", function (error, data) {
       resolve(data)
     })
   })

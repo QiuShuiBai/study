@@ -7,7 +7,6 @@ export function PDFPageView(options) {
 }
 
 let count = 0
-
 PDFPageView.prototype.draw = function(pdfPage, canvas) {
   count++
   this.pdfPage = pdfPage

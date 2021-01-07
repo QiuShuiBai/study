@@ -18,7 +18,9 @@ PDF.loadPDF({
 
     PDF.initDomStruct() // 根据需要渲染的页数，初始化dom结构
 
-    PDF.renderPDF(pdfDocument) // 渲染 pdf
+    PDF.renderPDF() // 渲染 pdf
+
+    PDF.listerScroll() // 监听滚动行为
   })
 })
 
