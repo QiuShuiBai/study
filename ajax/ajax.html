@@ -23,11 +23,28 @@
       <button onclick="useJsonp()">使用jsonp</button>
     </div>
   </div>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
   <script>
+    axios.get('http://172.25.162.34:3000/test?bane=[1,2,3]', {
+      params: {
+        firstName: {
+          vv: 1
+        },
+        lastName: 'Flintstone',
+      }
+    })
+    .then(function (response) {
+      console.log(response.data);
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  </script>
+  <!-- <script>
     function $Ajxa({method='GET', url, success, fail}) {
       let xmlHttp = new XMLHttpRequest()
       xmlHttp.open(method, url)
-      xmlHttp.send()
+      xmlHttp.send({a: [1, 2, 3]})
       xmlHttp.onreadystatechange = function() {
         if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
           success && success(JSON.parse(xmlHttp.responseText))
@@ -56,7 +73,7 @@
 
     function directAjax() {
       $Ajxa({
-        url: 'https://api.douban.com/v2/book/1220562',
+        url: 'http://172.25.162.34:3000/test',
         method: 'GET',
         success(data) {
           console.log(data)
@@ -68,13 +85,15 @@
     }
 
     function useJsonp() {
+      
+      const script = document.createElement('script')
       window.telJsonp = function(data) {
         console.log(data)
+        document.head.removeChild(script)
       }
-      let script = document.createElement('script')
-      script.src = 'https://api.douban.com/v2/book/1220562?callback=telJsonp'
+      script.src = 'http://172.25.162.34:3000/test?callback=telJsonp'
       document.getElementsByTagName('head')[0].appendChild(script)
     }
-  </script>
+  </script> -->
 </body>
 </html>

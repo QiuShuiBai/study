@@ -9,7 +9,7 @@ const app = new Koa();
 app.use(bodyParser())
 
 app.use(async (ctx, next) => {
-  // ctx.set('Access-Control-Allow-Origin', '*');
+  ctx.set('Access-Control-Allow-Origin', '*');
   ctx.set('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS')
   ctx.set("Access-Control-Allow-Headers", " Origin, X-Requested-With, Content-Type, Accept, X-Test");
   if (ctx.method == 'OPTIONS') {
@@ -21,6 +21,7 @@ app.use(async (ctx, next) => {
 
 router.get('/test', async (ctx, next) => {
   const callbackName = ctx.request.query.callback
+  console.log(ctx.request.body)
   const result = {
     errno: 0,
     errmsg: 'success',
@@ -30,7 +31,8 @@ router.get('/test', async (ctx, next) => {
   }
   const jsonpStr = `${callbackName}(${JSON.stringify(result)})`
 
-  ctx.response.body = callbackName ? jsonpStr : result
+  // ctx.response.body = callbackName ? jsonpStr : result
+  ctx.response.body = result
 });
 
 // add router middleware:
