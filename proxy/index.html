@@ -7,31 +7,36 @@
 </head>
 <body>
   <script>
-    console.log('---------')
     const handler = {
       get: function(target, key, receiver) {
         console.log('get me')
-        return target.key
+        return Reflect.get(target, key, receiver)
       },
+      // set: function(target, key, value, receiver) {
+      //   console.log('set me')
+      //   Reflect.set(target, key, value)
+      // },
       set: function(target, key, value, receiver) {
         console.log('set me')
-        target.key = value
         Reflect.set(target, key, value, receiver)
+      },
+      defineProperty: function (target, key) {
+        console.log('11111111 :>> ', 11111111);
       }
     }
 
     const something = { num: 0 }
     const somethingProxy = new Proxy(something, handler)
 
-    const anotherThing = Object.create(somethingProxy)
-    console.log()
-    console.log(anotherThing.num) // get me, 0
-    anotherThing.num = 1 // set me
-    anotherThing.num = 2
-    console.log(anotherThing.num) // 2
+    // somethingProxy.a = 1
 
-    // get me
-    // 0
+    const anotherThing = Object.create(somethingProxy)
+    
+    console.log()
+    console.log(anotherThing.num) // get me 0
+    anotherThing.age = 1 // set me
+    anotherThing.age = 2
+    console.log(Object.getOwnPropertyDescriptor(anotherThing, 'age'))
   </script>
 </body>
 </html>
