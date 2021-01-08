@@ -3,7 +3,8 @@ let loadingTextDom = document.querySelector('.html-toast-tip')
 let isShow = true
 
 export function showLoading(text = '请稍后') {
-  loadingTextDom.text = text
+  if (isShow) return
+  loadingTextDom.innerHTML = text
   isShow = true
   loadingDom.style.display = 'block'
 }

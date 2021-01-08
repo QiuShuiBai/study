@@ -2,6 +2,7 @@ import './index.styl'
 
 import * as PDF from './render'
 import { baseParams } from './utils/params'
+
 PDF.loadPDF({
   el: '#pdf-wrapper'
 }).then((loadingTask) => {

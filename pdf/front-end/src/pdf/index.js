@@ -1,4 +1,5 @@
 import { hideLoading } from '../utils/loading'
+import { baseParams } from '../utils/params'
 
 export function PDFPageView(options) {
   this.drew = false
@@ -25,6 +26,7 @@ PDFPageView.prototype.draw = function(pdfPage, canvas) {
     count--
     if (count === 0) {
       hideLoading()
+      baseParams.canCal = true
     }
   })
 }

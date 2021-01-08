@@ -1,9 +1,10 @@
 import { baseParams } from '../utils/params'
-import * as dom from '../utils/dom'
+import * as Dom from '../utils/dom'
 import { PDFPageView } from '../pdf'
+import { hideLoading, showLoading } from '../utils/loading'
 
 const urlFast = 'http://0.0.0.0:3000/heiheihei'
-const urlSlow = 'http://0.0.0.0:3000/hahaha'
+const urlSlow = 'http://172.25.162.130:3000/hahaha'
 
 let native = window.location.href
 let url = urlSlow
@@ -97,13 +98,10 @@ export function getVisiblePages(index) {
 }
 
 export function initDomStruct() {
-  const visibleCount = baseParams.visibleCount
   if (!baseParams.finishInitDom) {
     baseParams.finishInitDom = true
-    dom.createCanvas(baseParams.el, visibleCount)
-    const blockDom = dom.createBlockDom(baseParams.el)
-    baseParams.preDom = blockDom.preDom
-    baseParams.postDom = blockDom.postDom
+    Dom.createCanvas()
+    Dom.createBlockDom()
   }
 
   let preDom = baseParams.preDom
@@ -130,19 +128,25 @@ export function renderPDF() {
 }
 
 function scrollEnd() {
+  baseParams.canCal = false
   let el = baseParams.el
   const { divHeight } = baseParams
 
   let index = Math.floor(el.scrollTop / divHeight)
-  if (index === baseParams.index) return
+  if (index === baseParams.index) {
+    baseParams.canCal = true
+    return
+  }
 
   baseParams.index = index
 
-  // const spacing = el.scrollTop - (Math.floor(el.scrollTop / divHeight)) * divHeight
 
   getVisiblePages(index)
 
-  if (baseParams.oldEnd === baseParams.end) return
+  if (baseParams.oldEnd === baseParams.end) {
+    baseParams.canCal = true
+    return
+  }
 
   const sameIndex = diffIndex()
 
@@ -190,7 +194,10 @@ function cleanup(sameIndex) {
   }
 }
 function replaceDom(sameIndex) {
-  if (sameIndex.length === 0) return
+  if (sameIndex.length === 0) {
+    renderPDF()
+    return
+  }
   const { start, oldStart, end, oldEnd, container, pages } = baseParams
   let replaceStart = 0
   let replaceEnd = 0
@@ -201,7 +208,6 @@ function replaceDom(sameIndex) {
     replaceStart = oldStart - oldStart
     replaceEnd = start - oldStart
   }
-  console.log(sameIndex, replaceStart, replaceEnd)
   let pdfWraps = document.querySelectorAll('.the-wrapper')
 
   if (sameIndex[2] === 'up') {
@@ -215,6 +221,17 @@ function replaceDom(sameIndex) {
   }
   renderPDF()
 }
+function loading() {
+  let { el, preDom, postDom } = baseParams
+  if (el.scrollTop > postDom.offsetTop) {
+    showLoading()
+  } else if (el.scrollTop < preDom.clientHeight) {
+    showLoading()
+  } else {
+    hideLoading()
+  }
+  el = preDom = postDom = null
+}
 
 export function listerScroll() {
   let el = baseParams.el
@@ -222,11 +239,12 @@ export function listerScroll() {
   let timer = null
 
   el.addEventListener('scroll', function(e) {
-    console.log(e)
+
+    loading(e)
+
     clearTimeout(timer)
     timer = setTimeout(() => {
-      // console.log('scrollEnd')
-      scrollEnd()
+      baseParams.canCal && scrollEnd()
     }, 200)
   })
 

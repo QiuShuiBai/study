@@ -5,7 +5,3 @@ export const baseParams = {
   index: 0,
   el: null
 }
-
-export const dynamicParams = {
-
-}
