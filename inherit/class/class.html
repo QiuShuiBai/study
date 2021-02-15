@@ -17,6 +17,7 @@
         console.log('I can eat ', foot)
       }
     }
+    Super.test = 1
 
     class Sub extends Super{
       constructor(params = {}) {
@@ -38,7 +39,6 @@
       country: 'China'
     })
     person.eat('apple', person)
-    console.log(person)
   </script>
 </body>
 </html>
