@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <custom-dialog></custom-dialog>
+  <script>
+    class CustomDialog extends HTMLElement {
+      constructor() {
+        super()
+        
+        const h = document.createElement('h')
+        h.textContent = '标题'
+        const p = document.createElement('p')
+        p.textContent = '内容'
+        const button = document.createElement('button')
+        button.textContent = '按钮'
+
+        const wrapper = document.createElement('div')
+        wrapper.classList.add('custom-dialog-wrapper')
+        
+        const style = document.createElement('style')
+        style.textContent = `
+          .custom-dialog-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 100;
+            transform: translate(-50%, -50%);
+            box-sizing: border-box;
+            padding: 16px;
+            width: 300px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 0px 6px 0 rgba(0,0,0,0.20);
+          }
+          .custom-dialog-wrapper h {
+            font-size: 24px;
+          }
+          .custom-dialog-wrapper p {
+            margin: 10px 0;
+            font-size: 18px;
+          }
+          .custom-dialog-wrapper button {
+            width: 50px;
+          }
+        `
+
+        wrapper.append(h, p, button)
+        this.append(style, wrapper)
+      }
+    }
+    window.customElements.define('custom-dialog', CustomDialog)
+  </script>
+</body>
+</html>
