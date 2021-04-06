@@ -18,9 +18,9 @@
       constructor() {
         super()
 
-        const shadow = this.attachShadow({mode: 'closed'})
+        const shadow = this.attachShadow({mode: 'open'})
 
-        const h = document.createElement('h')
+        const h = document.createElement('h2')
         h.textContent = '标题'
         const p = document.createElement('p')
         p.textContent = '内容'
@@ -45,8 +45,9 @@
             border-radius: 10px;
             box-shadow: 0px 0px 6px 0 rgba(0,0,0,0.20);
           }
-          .custom-dialog-wrapper h {
+          .custom-dialog-wrapper h2 {
             font-size: 24px;
+            margin: 0px
           }
           .custom-dialog-wrapper p {
             margin: 10px 0;
@@ -63,6 +64,15 @@
       }
     }
     window.customElements.define('custom-dialog', CustomDialog)
+  </script>
+  <script>
+    const dialog = document.querySelector('custom-dialog').shadowRoot
+    const customStyle = document.createElement('style')
+    customStyle.innerHTML = `
+      .custom-dialog-wrapper h2 {
+        color: palevioletred;
+      }`
+    dialog.append(customStyle)
   </script>
 </body>
 </html>
