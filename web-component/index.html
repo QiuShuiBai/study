@@ -5,6 +5,11 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+    .custom-dialog-wrapper {
+      color: red;
+    }
+  </style>
 </head>
 <body>
   <custom-dialog></custom-dialog>
@@ -12,7 +17,9 @@
     class CustomDialog extends HTMLElement {
       constructor() {
         super()
-        
+
+        const shadow = this.attachShadow({mode: 'closed'})
+
         const h = document.createElement('h')
         h.textContent = '标题'
         const p = document.createElement('p')
@@ -51,7 +58,8 @@
         `
 
         wrapper.append(h, p, button)
-        this.append(style, wrapper)
+        // this.append(style, wrapper)
+        shadow.append(style, wrapper)
       }
     }
     window.customElements.define('custom-dialog', CustomDialog)
