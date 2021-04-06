@@ -46,14 +46,13 @@
     </div>
   </template>
 
-  <custom-dialog>
-  </custom-dialog>
+  <custom-dialog></custom-dialog>
   <script>
     class CustomDialog extends HTMLElement {
       constructor() {
         super()
 
-        const shadow = this.attachShadow({mode: 'closed'})
+        const shadow = this.attachShadow({mode: 'open'})
         
         const dialog = document.getElementById('custom-dialog-wrapper').content.cloneNode(true)
         dialog.querySelector('p').textContent = '更新文案'
@@ -62,6 +61,15 @@
       }
     }
     window.customElements.define('custom-dialog', CustomDialog)
+  </script>
+  <script>
+    const dialog = document.querySelector('custom-dialog').shadowRoot
+    const customStyle = document.createElement('style')
+    customStyle.innerHTML = `
+      .custom-dialog-wrapper h2 {
+        color: palevioletred;
+      }`
+    dialog.append(customStyle)
   </script>
 </body>
 </html>
