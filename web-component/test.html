@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .tips {
+      color: palevioletred;
+    }
+  </style>
+</head>
+<body>
+  <custom-dialog>
+    <p slot="tips" class="tips">哈哈哈</p>
+  </custom-dialog>
+  <script>
+    class CustomDialog extends HTMLElement {
+      constructor() {
+        super()
+
+        const shadow = this.attachShadow({mode: 'open'})
+        
+        shadow.innerHTML = `
+          <style>
+            .custom-dialog-wrapper {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              z-index: 100;
+              transform: translate(-50%, -50%);
+              box-sizing: border-box;
+              padding: 16px;
+              width: 300px;
+              text-align: center;
+              border-radius: 10px;
+              box-shadow: 0px 0px 6px 0 rgba(0,0,0,0.20);
+            }
+            .custom-dialog-wrapper .title {
+              margin: 0;
+              font-size: 24px;
+            }
+            .custom-dialog-wrapper .content {
+              margin: 10px 0;
+              font-size: 18px;
+            }
+            .custom-dialog-wrapper .tips {
+              margin-bottom: 10px;
+              font-size: 12px;
+              color: #333;
+            }
+            .custom-dialog-wrapper .button {
+              width: 50px;
+            }
+          </style>
+          <div class="custom-dialog-wrapper">
+            <h2 class="title">标题</h2>
+            <p class="content">内容</p>
+            <slot name="tips">
+              <p class="tips">我是补充文案</p>
+            </slot>
+            <button class="button">按钮</button>
+          </div>
+        `
+      }
+      adoptedCallback() {
+        console.log('move')
+      }
+    }
+    window.customElements.define('custom-dialog', CustomDialog)
+  </script>
+</body>
+</html>

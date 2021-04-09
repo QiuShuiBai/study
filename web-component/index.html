@@ -5,61 +5,27 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+  </style>
 </head>
 <body>
   <custom-dialog></custom-dialog>
-  <script>
-    class CustomDialog extends HTMLElement {
-      constructor() {
-        super()
+  <script src="./custom-dialog.js"></script>
 
-        const shadow = this.attachShadow({mode: 'open'})
-        
-        shadow.innerHTML = `
-          <style>
-            .custom-dialog-wrapper {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              z-index: 100;
-              transform: translate(-50%, -50%);
-              box-sizing: border-box;
-              padding: 16px;
-              width: 300px;
-              text-align: center;
-              border-radius: 10px;
-              box-shadow: 0px 0px 6px 0 rgba(0,0,0,0.20);
-            }
-            .custom-dialog-wrapper h2 {
-              margin: 0;
-              font-size: 24px;
-            }
-            .custom-dialog-wrapper p {
-              margin: 10px 0;
-              font-size: 18px;
-            }
-            .custom-dialog-wrapper button {
-              width: 50px;
-            }
-          </style>
-          <div class="custom-dialog-wrapper">
-            <h2>标题</h2>
-            <p>内容</p>
-            <button>按钮</button>
-          </div>
-        `
-      }
-    }
-    window.customElements.define('custom-dialog', CustomDialog)
-  </script>
   <script>
-    const dialog = document.querySelector('custom-dialog').shadowRoot
-    const customStyle = document.createElement('style')
-    customStyle.innerHTML = `
-      .custom-dialog-wrapper h2 {
-        color: palevioletred;
-      }`
-    dialog.append(customStyle)
+    console.log('hhhh')
+    function cat() {
+      console.log('小猫咪')
+    }
+    // const myDialog = new CustomDialog()
+    // myDialog.setAttribute('onCat', 'cat()')
+    // myDialog.onCat = function() {
+    //   console.log('小猫咪')
+    // }
+    // myDialog.show()
+    // myDialog.addEventListener('cat', () => {
+    //   console.log('小猫咪')
+    // })
   </script>
 </body>
 </html>
