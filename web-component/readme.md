@@ -140,7 +140,7 @@ constructor() {
 }
 ```
 
-> 可访问该 [链接]()查看当前详细代码
+> 可访问该 [链接](https://github.com/QiuShuiBai/study/blob/ba9d316bb7c8a0b468eaff2fb9468bf717bdc008/web-component/index.html)查看当前详细代码
 
 如此一来，我们就可以在任意需要使用到 `custom-dialog` 组件的地方，引入该js文件即可。
 
@@ -414,7 +414,7 @@ constructor() {
 
 ### 起步
 
-首先拿到上半篇时的代码，然后开始魔改。可通过该 [链接]() 获取。
+首先拿到上半篇时的代码，然后开始魔改。可通过该 [链接](https://github.com/QiuShuiBai/study/tree/ffa926cb5c4d410a2d91e6bc0b8019c81de393bb/web-component) 获取。
 
 首先进行 html、js 分离，抽离 `CustomDialog` 为一个单独的 js 文件 `custom-dialog.js`。
 
@@ -514,4 +514,4 @@ class CustomDialog extends HTMLElement {
 
 > 注意这类的模版，添加了 title 等 class 变量，单纯便于后续获取 dom
 
-[代码在此]()
+[代码在此](https://github.com/QiuShuiBai/study/blob/master/web-component/custom-dialog.js)
