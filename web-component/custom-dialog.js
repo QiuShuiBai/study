@@ -1,9 +1,35 @@
 class CustomDialog extends HTMLElement {
+  data = {
+    title: '标题',
+    content: '内容',
+    btnText: '确认'
+  }
+  methods = {
+  }
   constructor() {
     super()
+    this.proxy()
+    this.render()
+  }
+  proxy() {
+    const { methods, data } = this
+    Object.keys(methods).forEach(key => {
+      this[key] = methods[key].bind(this)
+    })
 
+    Object.keys(data).forEach(key => {
+      Object.defineProperty(this, key, {
+        get() {
+          return this.getAttribute(key) || data[key]
+        },
+        set(val) {
+          this.setAttribute(key, val)
+        }
+      })
+    })
+  }
+  render() {
     const shadow = this.attachShadow({mode: 'open'})
-    
     shadow.innerHTML = `
       <style>
         .custom-dialog-wrapper {
@@ -32,11 +58,24 @@ class CustomDialog extends HTMLElement {
         }
       </style>
       <div class="custom-dialog-wrapper">
-        <h2>标题</h2>
-        <p>内容</p>
-        <button>按钮</button>
+        <h2 class="title">${this.title}</h2>
+        <p class="content">${this.content}</p>
+        <button class="button">${this.btnText}</button>
       </div>
     `
+    this.titleDom = shadow.querySelector('.title')
+    this.contentDom = shadow.querySelector('.content')
+    this.buttonDom = shadow.querySelector('.button')
+  }
+
+  static get observedAttributes() {
+    return ['title', 'content', 'btnText']
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    const dom = name + 'Dom'
+    if (this[dom]) {
+      this[dom].textContent = newValue
+    }
   }
 }
 window.customElements.define('custom-dialog', CustomDialog)

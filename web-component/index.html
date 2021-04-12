@@ -7,16 +7,26 @@
   <title>Document</title>
 </head>
 <body>
-  <custom-dialog></custom-dialog>
+  <!-- <custom-dialog></custom-dialog> -->
+  <!-- <script src="./finish.js"></script> -->
   <script src="./custom-dialog.js"></script>
   <script>
-    const dialog = document.querySelector('custom-dialog').shadowRoot
+    const customDialog = new CustomDialog()
+    document.body.append(customDialog)
+
+
+    const dialog = customDialog.shadowRoot
     const customStyle = document.createElement('style')
     customStyle.innerHTML = `
       .custom-dialog-wrapper h2 {
         color: palevioletred;
       }`
     dialog.append(customStyle)
+
+    customDialog.title = '新标题1'
+    setTimeout(() => {
+      customDialog.setAttribute('title', '新标题2')
+    }, 3000)
   </script>
 </body>
 </html>

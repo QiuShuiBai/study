@@ -414,8 +414,104 @@ constructor() {
 
 ### 起步
 
-我们首先拿到上半篇时的代码，然后开始魔改。可通过该 [链接]() 获取。
+首先拿到上半篇时的代码，然后开始魔改。可通过该 [链接]() 获取。
 
 首先进行 html、js 分离，抽离 `CustomDialog` 为一个单独的 js 文件 `custom-dialog.js`。
 
 ### 简单封装
+
+基于 vue 习惯，给实例添加两个属性：`data` 和 `methods`，同时通过 `Object.defineProperty` 进行代理：
+
+```js
+class CustomDialog extends HTMLElement {
+  data = {
+    title: '标题',
+    content: '内容',
+    btnText: '确认'
+  }
+  methods = {
+    // 后续补上
+  }
+  constructor() {
+    super()
+    this.proxy()
+    // 省略
+  }
+
+  proxy() {
+    const { methods, data } = this
+    Object.keys(methods).forEach(key => {
+      this[key] = methods[key].bind(this)
+    })
+
+    Object.keys(data).forEach(key => {
+      Object.defineProperty(this, key, {
+        get() {
+          return this.getAttribute(key) || data[key]
+        },
+        set(val) {
+          this.setAttribute(key, val)
+        }
+      })
+    })
+  }
+}
+```
+
+注意 data 的 set 部分，当我们获取到 CustomDialog 的实例后，可以直接修改实例上的 `title` 属性来触发 `setAttribute` 原生 dom 操作。接下来需要对属性的修改进行监听：
+
+```js
+class CustomDialog extends HTMLElement {
+  // 省略
+  static get observedAttributes() {
+    return ['title', 'content', 'btnText']
+  }
+  attributeChangedCallback(name, oldValue, newValue) {
+    const dom = name + 'Dom'
+    if (this[dom]) {
+      this[dom].textContent = newValue
+    }
+  }
+}
+```
+
+此时，当直接修改实例 title 属性或通过 `setAttribute` 方法修改 html 属性时，都会触发 `attributeChangedCallback` 方法。
+
+```js
+document.querySelector('custom-dialog').title = '新的标题'
+// 或者
+document.querySelector('custom-dialog').setAttribute('title', '新的标题')
+```
+
+接着看 `attributeChangedCallback` 方法中，是需要在实例上找到 `titleDom` 或 `contentDom` 这个属性的，很明显现在还没有...我们抽离 constructor 中，初始化 dom 的部分并给实例添加 render 方法
+
+```js
+class CustomDialog extends HTMLElement {
+  // 省略
+  constructor() {
+    super()
+    this.proxy()
+    this.render()
+  }
+  render() {
+    const shadow = this.attachShadow({mode: 'open'})
+    shadow.innerHTML = `
+      <style> 省略 css </style>
+      <div class="custom-dialog-wrapper">
+        <h2 class="title">${this.title}</h2>
+        <p class="content">${this.content}</p>
+        <button class="button">${this.btnText}</button>
+      </div>
+    `
+    this.titleDom = shadow.querySelector('.title')
+    this.contentDom = shadow.querySelector('.content')
+    this.buttonDom = shadow.querySelector('.button')
+  }
+}
+```
+
+可以看到，因为之前代理了 data 属性，所以在此时可以直接用在模版字符串里（有点类似 vue template 的味道吧）。后续便是定义 `titleDom` 等变量，于此配合 `attributeChangedCallback` 方法，整个组件最基础的部分完成了。
+
+> 注意这类的模版，添加了 title 等 class 变量，单纯便于后续获取 dom
+
+[代码在此]()
