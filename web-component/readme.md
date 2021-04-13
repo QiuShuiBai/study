@@ -2,7 +2,7 @@
 
 web components 是以原生形式来进行类似 vue 的组件定义。主要是通过 `HTMLElement` 及 `customElements` 两个内置的接口。
 
-整体概念可以通过 [MND](https://developer.mozilla.org/zh-CN/docs/Web/Web_Components) 了解
+整体概念可以通过 [MDN](https://developer.mozilla.org/zh-CN/docs/Web/Web_Components) 了解
 
 ## 基础介绍
 
@@ -418,7 +418,7 @@ constructor() {
 
 首先进行 html、js 分离，抽离 `CustomDialog` 为一个单独的 js 文件 `custom-dialog.js`。
 
-### 简单封装
+### 内容更新
 
 基于 vue 习惯，给实例添加两个属性：`data` 和 `methods`，同时通过 `Object.defineProperty` 进行代理：
 
@@ -483,7 +483,7 @@ document.querySelector('custom-dialog').title = '新的标题'
 document.querySelector('custom-dialog').setAttribute('title', '新的标题')
 ```
 
-接着看 `attributeChangedCallback` 方法中，是需要在实例上找到 `titleDom` 或 `contentDom` 这个属性的，很明显现在还没有...我们抽离 constructor 中，初始化 dom 的部分并给实例添加 render 方法
+接着看 `attributeChangedCallback` 方法中是需要在实例上找到 `titleDom` 或 `contentDom` 这个属性的，很明显现在还没有...我们抽离 constructor 中，初始化 dom 的部分并给实例添加 render 方法
 
 ```js
 class CustomDialog extends HTMLElement {
@@ -514,4 +514,131 @@ class CustomDialog extends HTMLElement {
 
 > 注意这类的模版，添加了 title 等 class 变量，单纯便于后续获取 dom
 
-[代码在此](https://github.com/QiuShuiBai/study/blob/master/web-component/custom-dialog.js)
+此阶段代码[在此](https://github.com/QiuShuiBai/study/blob/master/web-component/custom-dialog.js)
+
+### show / hide 方法
+
+现在的代码已经满足简单的数据更新功能了，当时在运用时，还是会有些奇怪：
+
+```js
+const dialog = new CustomDialog()
+
+// 添加
+document.body.append(dialog)
+
+// 隐藏
+dialog.style.display = 'none'
+
+// 显示
+dialog.style.display = 'block'
+```
+
+很显然用户是需要实例提供`show`和`hide`方法，这样可以避免直接操作 dom。
+
+我们回到 CustomDialog 类中，当时留的 methods 坑，现在可以用上了：
+
+```js
+class CustomDialog extends HTMLElement {
+  // 省略部分代码
+  methods = {
+    show() {
+      if (!this.parentNode) {
+        document.body.append(this)
+      }
+      this.style.display = 'block'
+    },
+    hide() {
+      this.style.display = 'none'
+    }
+  }
+  constructor() {
+    this.proxy()
+  }
+}
+```
+
+这里的 show 和 hide 很简单，单纯地封装了一下 dom 操作。`show` 方法集合了添加进 dom 的操作，这里只是简单判断了一下元素是否有父节点，仅作为简单示意。
+
+### 事件
+
+接下来给组件添加事件，当用户点击了按钮后，需要派发一个 confirm 事件。对齐平常的 click 事件，用户有一下几种监听事件的方式：
+
+```html
+<!-- DOM0 事件 - html 写法 -->
+<custom-dialog onConfirm = "confirm()"></custom-dialog>
+
+<script>
+  const dialog = document.querySelector('custom-dialog')
+
+  // DOM0 事件 - js
+  dialog.onConfirm = function() {}
+
+  // DOM2 事件
+  dialog.addEventListener('confirm', function() {})
+</script>
+```
+
+先实现 DOM0 事件，给 `CustomDialog` 类添加一个函数 `processEvents`，便于分离行为
+
+```js
+processEvents() {
+  this.buttonDom.addEventListener('click', () => {
+    // DOM 0
+    if (this.onConfirm) {
+      this.onConfirm()
+    } else {
+      const htmlEvent = this.getAttribute('onConfirm')
+      try {
+        eval(htmlEvent))
+      } catch {
+        console.warn('出错了')
+      }
+    }
+  })
+}
+```
+
+当 dialog 的按钮触发 click 事件后，便会获取用户定义的 `onConfirm` 事件并执行。
+
+> 注意：
+>
+> 1. 获取 html 中事件时，可能会出现该事件未定义的情况，这里简单处理
+>
+> 2. 这里只是简单处理了一下 DOM0 事件，并没有完全模拟
+
+接下来处理 DOM2 事件，DOM2 事件通过 [CustomEvent](https://developer.mozilla.org/zh-CN/docs/Web/API/CustomEvent) 进行派发，再过 `addEventListener` 进行监听。现在只差在 button 的 click 事件中派发：
+
+```js
+processEvents() {
+  this.buttonDom.addEventListener('click', () => {
+    // DOM 0 省略
+    if (this.onConfirm) {
+    } else {
+    }
+
+    // DOM 2
+    this.dispatchEvent(new CustomEvent('confirm'))
+  })
+}
+```
+
+至此，基本就完工了。在外界监听时，只用：
+
+```html
+<custom-dialog onConfirm="onConfirm()"></custom-dialog>
+<script src="./custom-dialog.js"></script>
+<script>
+  const dialog = document.querySelector('custom-dialog')
+
+  dialog.onConfirm = function() {
+    console.log('DOM 0')
+  }
+
+  function onConfirm() {
+    console.log('html event')
+  }
+  dialog.addEventListener('confirm', () => {
+    console.log('DOM 2')
+  })
+</script>
+```

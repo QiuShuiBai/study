@@ -7,26 +7,22 @@
   <title>Document</title>
 </head>
 <body>
-  <!-- <custom-dialog></custom-dialog> -->
+  <custom-dialog onConfirm="onConfirm()"></custom-dialog>
   <!-- <script src="./finish.js"></script> -->
   <script src="./custom-dialog.js"></script>
   <script>
-    const customDialog = new CustomDialog()
-    document.body.append(customDialog)
+    const dialog = document.querySelector('custom-dialog')
 
+    dialog.onConfirm = function() {
+      console.log('DOM 0')
+    }
 
-    const dialog = customDialog.shadowRoot
-    const customStyle = document.createElement('style')
-    customStyle.innerHTML = `
-      .custom-dialog-wrapper h2 {
-        color: palevioletred;
-      }`
-    dialog.append(customStyle)
-
-    customDialog.title = '新标题1'
-    setTimeout(() => {
-      customDialog.setAttribute('title', '新标题2')
-    }, 3000)
+    function onConfirm() {
+      console.log('html event')
+    }
+    dialog.addEventListener('confirm', () => {
+      console.log('DOM 2')
+    })
   </script>
 </body>
 </html>

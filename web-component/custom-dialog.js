@@ -5,11 +5,21 @@ class CustomDialog extends HTMLElement {
     btnText: '确认'
   }
   methods = {
+    show() {
+      if (!this.parentNode) {
+        document.body.append(this)
+      }
+      this.style.display = 'block'
+    },
+    hide() {
+      this.style.display = 'none'
+    }
   }
   constructor() {
     super()
     this.proxy()
     this.render()
+    this.processEvents()
   }
   proxy() {
     const { methods, data } = this
@@ -67,6 +77,22 @@ class CustomDialog extends HTMLElement {
     this.contentDom = shadow.querySelector('.content')
     this.buttonDom = shadow.querySelector('.button')
   }
+  processEvents() {
+    this.buttonDom.addEventListener('click', () => {
+      // DOM 0
+      if (this.onConfirm) {
+        this.onConfirm()
+      } else {
+        const htmlEvent = this.getAttribute('onConfirm')
+        try {
+          eval(htmlEvent)
+        } catch {}
+      }
+
+      // DOM 2
+      this.dispatchEvent(new CustomEvent('confirm'))
+    })
+  }
 
   static get observedAttributes() {
     return ['title', 'content', 'btnText']
@@ -79,3 +105,4 @@ class CustomDialog extends HTMLElement {
   }
 }
 window.customElements.define('custom-dialog', CustomDialog)
+
