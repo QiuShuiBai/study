@@ -1,9 +1,16 @@
 class CustomDialog extends HTMLElement {
+  constructor() {
+    super()
+    this.proxy()
+    this.render()
+  }
+
   data = {
     title: '标题',
     content: '内容',
-    btnText: '确认'
+    btnText: '按钮'
   }
+
   methods = {
     show() {
       if (!this.parentNode) {
@@ -15,12 +22,7 @@ class CustomDialog extends HTMLElement {
       this.style.display = 'none'
     }
   }
-  constructor(params) {
-    super()
-    this.proxy()
-    this.render()
-    this.processEvents()
-  }
+
   proxy() {
     const { methods, data } = this
     Object.keys(methods).forEach(key => {
@@ -38,6 +40,7 @@ class CustomDialog extends HTMLElement {
       })
     })
   }
+
   render() {
     const shadow = this.attachShadow({mode: 'open'})
     shadow.innerHTML = `
@@ -55,45 +58,36 @@ class CustomDialog extends HTMLElement {
           border-radius: 10px;
           box-shadow: 0px 0px 6px 0 rgba(0,0,0,0.20);
         }
-        .custom-dialog-wrapper h2 {
+        .custom-dialog-wrapper .title {
           margin: 0;
           font-size: 24px;
         }
-        .custom-dialog-wrapper p {
+        .custom-dialog-wrapper .content {
           margin: 10px 0;
           font-size: 18px;
         }
-        .custom-dialog-wrapper button {
+        .custom-dialog-wrapper .tips {
+          margin-bottom: 10px;
+          font-size: 12px;
+          color: #333;
+        }
+        .custom-dialog-wrapper .button {
           width: 50px;
         }
       </style>
       <div class="custom-dialog-wrapper">
         <h2 class="title">${this.title}</h2>
         <p class="content">${this.content}</p>
+        <slot name="tips">
+        </slot>
         <button class="button">${this.btnText}</button>
       </div>
     `
+
     this.titleDom = shadow.querySelector('.title')
     this.contentDom = shadow.querySelector('.content')
     this.buttonDom = shadow.querySelector('.button')
   }
-  processEvents() {
-    this.buttonDom.addEventListener('click', () => {
-      // DOM 0
-      if (this.onConfirm) {
-        this.onConfirm()
-      } else {
-        const htmlEvent = this.getAttribute('onConfirm')
-        try {
-          eval(htmlEvent)
-        } catch {}
-      }
-
-      // DOM 2
-      this.dispatchEvent(new CustomEvent('confirm'))
-    })
-  }
-
   static get observedAttributes() {
     return ['title', 'content', 'btnText']
   }
@@ -103,6 +97,14 @@ class CustomDialog extends HTMLElement {
       this[dom].textContent = newValue
     }
   }
+  connectedCallback() {
+    const catEvent = this.getAttribute('oncat')
+    const onCat = this.onCat
+    if (onCat) {
+      onCat()
+    } else if (catEvent) {
+      // eval(catEvent)
+    }
+  }
 }
 window.customElements.define('custom-dialog', CustomDialog)
-

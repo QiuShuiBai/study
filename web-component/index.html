@@ -8,21 +8,25 @@
 </head>
 <body>
   <custom-dialog onConfirm="onConfirm()"></custom-dialog>
-  <!-- <script src="./finish.js"></script> -->
   <script src="./custom-dialog.js"></script>
   <script>
-    const dialog = document.querySelector('custom-dialog')
+    // const dialog = new CustomDialog({
+    //   title: 1
+    // })
+    // dialog.show()
+    // const dialog = document.createElement('custom-dialog')
+    // const dialog = document.querySelector('custom-dialog')
 
-    dialog.onConfirm = function() {
-      console.log('DOM 0')
-    }
+    // dialog.onConfirm = function() {
+    //   console.log('DOM 0')
+    // }
 
     function onConfirm() {
       console.log('html event')
     }
-    dialog.addEventListener('confirm', () => {
-      console.log('DOM 2')
-    })
+    // dialog.addEventListener('confirm', () => {
+    //   console.log('DOM 2')
+    // })
   </script>
 </body>
 </html>
