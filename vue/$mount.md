@@ -139,6 +139,6 @@ function createElm (
 }
 ```
 
-在 `createElm`时，会先进行 `createComponent` 方法，在这里只简单介绍一下：此方法会优先创建自组件、并且让子组件再次走当前 `new Vue` 逻辑（方式不同）。这样的行为结果就是，先创建、插入子组件dom。
+在 `createElm`时，会先进行 `createComponent` 方法，在这里只简单介绍一下：此方法会优先创建子组件、并且让子组件再次走当前 `new Vue` 逻辑（方式不同）。这样的行为结果就是，先创建、插入子组件dom。
 
-`createComponent` 方法插入自组件结束后，会根据当前 vnode 来创建 文本结点、注释、'div' 等真实dom 元素，最后再把该组件插入父元素中，以实现挂载
+`createComponent` 方法插入子组件结束后，会根据当前 vnode 来创建 文本结点、注释、'div' 等真实dom 元素，最后通过 `insert` 方法再把该组件插入父元素中，以实现挂载。
